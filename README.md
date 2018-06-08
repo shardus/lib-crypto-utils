@@ -22,3 +22,11 @@ verify(obj, sig, pk)
 ## Install
 
 `npm install asyed94/crypto-utils`
+
+## Use
+
+```JavaScript
+const cryptoUtils = require('crypto-utils')
+let msg = cryptoUtils.hash('Hello world!')
+console.log(msg)
+```
