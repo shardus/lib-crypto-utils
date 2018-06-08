@@ -2,7 +2,7 @@
 
 Provides a simple interface to cryptographic functions.
 
-```
+```JavaScript
 // Returns a random 256 bit hex string
 randomBits()
 
