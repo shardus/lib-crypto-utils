@@ -18,3 +18,7 @@ sign(obj, sk)
 // Returns true if the object was signed by the owner of the pk
 verify(obj, sig, pk)
 ```
+
+## Install
+
+`npm install asyed94/crypto-utils`
