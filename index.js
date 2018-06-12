@@ -39,11 +39,15 @@ function sign (obj, sk) {
 
 // Returns true if the object was signed by the owner of the pk
 function verify (obj, sig, pk) {
-  let sigBuf = Buffer.from(sig, 'hex')
-  let pkBuf = Buffer.from(pk, 'hex')
-  let sighash = sodium.crypto_sign_open(sigBuf, pkBuf).toString('hex')
-  let objhash = hash(stringify(obj))
-  return sighash === objhash
+  try {
+    let sigBuf = Buffer.from(sig, 'hex')
+    let pkBuf = Buffer.from(pk, 'hex')
+    let sighash = sodium.crypto_sign_open(sigBuf, pkBuf).toString('hex')
+    let objhash = hash(stringify(obj))
+    return sighash === objhash
+  } catch (e) {
+    return false
+  }
 }
 
 exports.randomBits = randomBits
