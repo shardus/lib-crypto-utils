@@ -1,21 +1,21 @@
 {
-  "name": "crypto-utils",
+  "name": "ulc-crypto-utils",
   "version": "1.0.0",
-  "description": "Provides simple crypto functions.",
+  "description": "Provides simple crypto functions, as used by the ULC Project.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/asyed94/crypto-utils.git"
+    "url": "git+https://github.com/ThatOneBro/ulc-crypto-utils.git"
   },
-  "author": "Aamir Syed",
+  "contributors": ["Aamir Syed", "Derrick Farris"],
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/asyed94/crypto-utils/issues"
+    "url": "https://github.com/ThatOneBro/ulc-crypto-utils/issues"
   },
-  "homepage": "https://github.com/asyed94/crypto-utils#readme",
+  "homepage": "https://github.com/ThatOneBro/ulc-crypto-utils#readme",
   "dependencies": {
   	"sodium": "*",
   	"json-stable-stringify": "*"
