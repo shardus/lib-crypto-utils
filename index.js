@@ -8,15 +8,16 @@ try {
   process.exit()
 }
 
-// Returns a random 256 bit hex string
+// Returns a random 256-bit hex string
 function randomBits () {
   return crypto.randomBytes(32).toString('hex')
 }
 
-// Returns the hash of the obj
-function hash (obj) {
+// Returns the SHA256 hash of the input
+function hash (input) {
+  if (typeof input !== 'string') input = stringify(input)
   let hash = crypto.createHash('sha256')
-  hash.update(stringify(obj))
+  hash.update(input)
   return hash.digest('hex')
 }
 
@@ -29,22 +30,24 @@ function generateKeypair () {
   }
 }
 
-// Returns a signature obtained by signing the obj with the sk
-function sign (obj, sk) {
-  let objhashBuf = Buffer.from(hash(stringify(obj)), 'hex')
+// Returns a signature obtained by signing the hash of the input with the sk
+function sign (input, sk) {
+  if (typeof input !== 'string') input = stringify(input)
+  let inputhashBuf = Buffer.from(hash(input), 'hex')
   let skBuf = Buffer.from(sk, 'hex')
-  let sig = sodium.crypto_sign(objhashBuf, skBuf).toString('hex')
+  let sig = sodium.crypto_sign(inputhashBuf, skBuf).toString('hex')
   return sig
 }
 
-// Returns true if the object was signed by the owner of the pk
-function verify (obj, sig, pk) {
+// Returns true if the hash of the input was signed by the owner of the pk
+function verify (input, sig, pk) {
   try {
     let sigBuf = Buffer.from(sig, 'hex')
     let pkBuf = Buffer.from(pk, 'hex')
     let sighash = sodium.crypto_sign_open(sigBuf, pkBuf).toString('hex')
-    let objhash = hash(stringify(obj))
-    return sighash === objhash
+    if (typeof input !== 'string') input = stringify(input)
+    let inputhash = hash(input)
+    return sighash === inputhash
   } catch (e) {
     return false
   }
