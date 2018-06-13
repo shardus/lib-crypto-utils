@@ -21,7 +21,7 @@ verify(obj, sig, pk)
 
 ## Install
 
-`npm install asyed94/crypto-utils`
+`npm install ThatOneBro/ulc-crypto-utils
 
 ## Use
 
