@@ -1,6 +1,6 @@
-# crypto-utils
+# ulc-crypto-utils
 
-Provides a simple interface to cryptographic functions.
+Provides a simple interface to cryptographic functions, as used by the ULC Project.
 
 ```JavaScript
 // Returns a random 256 bit hex string
