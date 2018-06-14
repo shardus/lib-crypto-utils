@@ -4,6 +4,7 @@ Provides a simple interface to cryptographic functions, as used by the ULC Proje
 
 ```JavaScript
 const crypto = require('ulc-crypto-utils')
+
 // Module has a constructor that takes in a 32-byte hex key as required by node-sodium for generic hashing
 crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
 
