@@ -4,21 +4,25 @@ let crypto
 try {
   crypto = require('crypto')
 } catch (e) {
-  console.log('FATAL: Node compiled without crypto support.')
-  process.exit()
+  throw new Error('Node compiled without crypto support.')
 }
+
+let HASH_KEY
 
 // Returns a random 256-bit hex string
 function randomBits () {
   return crypto.randomBytes(32).toString('hex')
 }
 
-// Returns the SHA256 hash of the input
+// Returns the Blake2b hash of the input
 function hash (input) {
+  if (!HASH_KEY) {
+    throw new Error('Hash key must be passed to module constructor.')
+  }
   if (typeof input !== 'string') input = stringify(input)
-  let hash = crypto.createHash('sha256')
-  hash.update(input)
-  return hash.digest('hex')
+  let buf = Buffer.from(input, 'utf8')
+  let digest = sodium.crypto_generichash_blake2b(32, buf, HASH_KEY)
+  return digest.toString('hex')
 }
 
 // Generates and retuns {publicKey, secretKey} as hex strings
@@ -52,6 +56,22 @@ function verify (input, sig, pk) {
     return false
   }
 }
+
+function init (key) {
+  if (!key) {
+    throw new Error('Hash key must be passed to module constructor.')
+  }
+  try {
+    HASH_KEY = Buffer.from(key, 'hex')
+    if (HASH_KEY.length !== 32) {
+      throw new TypeError()
+    }
+  } catch (e) {
+    throw new TypeError('Hash key must be a 32-byte string.')
+  }
+}
+
+exports = module.exports = init
 
 exports.randomBits = randomBits
 exports.hash = hash

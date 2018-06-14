@@ -3,20 +3,24 @@
 Provides a simple interface to cryptographic functions, as used by the ULC Project.
 
 ```JavaScript
-// Returns a random 256 bit hex string
-randomBits()
+// Module has a constructor that takes in a 32-byte hex key as required by node-sodium for the Blake2b generic hashing function
+const crypto = require('ulc-crypto-utils')
+crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
 
-// Returns the hash of the obj
-hash(obj)
+// Returns a random 256-bit hex string
+crypto.randomBits()
 
-// Generates and retuns {publicKey, secretKey} as hex strings
-generateKeypair()
+// Returns the hash of the input
+crypto.hash(input)
 
-// Returns a signature obtained by signing the obj with the sk
-sign(obj, sk)
+// Generates and returns {publicKey, secretKey} as hex strings
+crypto.generateKeypair()
 
-// Returns true if the object was signed by the owner of the pk
-verify(obj, sig, pk)
+// Returns a signature obtained by signing the hash of the input with the sk
+crypto.sign(input, sk)
+
+// Returns true if the input was signed by the owner of the pk
+crypto.verify(input, sig, pk)
 ```
 
 ## Install
@@ -26,7 +30,9 @@ verify(obj, sig, pk)
 ## Use
 
 ```JavaScript
-const cryptoUtils = require('crypto-utils')
-let msg = cryptoUtils.hash('Hello world!')
+const crypto = require('ulc-crypto-utils')
+crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
+
+let msg = crypto.hash('Hello world!')
 console.log(msg)
 ```
