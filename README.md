@@ -17,7 +17,7 @@ crypto.hash(input)
 // Generates and returns {publicKey, secretKey} as hex strings
 crypto.generateKeypair()
 
-// Returns a signature obtained by signing the hash of the input with the sk
+// Returns a signature obtained by signing the input (a hash) with the sk
 crypto.sign(input, sk)
 
 // Returns true if the input was signed by the owner of the pk
