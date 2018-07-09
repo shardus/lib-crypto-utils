@@ -1,6 +1,6 @@
 # ulc-crypto-utils
 
-Provides a simple interface to cryptographic functions, as used by the ULC Project.
+Provides a simple interface to node-sodium cryptographic functions, as used by the ULC Project.
 
 ```JavaScript
 // Module has a constructor that takes in a 32-byte hex key as required by node-sodium for the Blake2b generic hashing function

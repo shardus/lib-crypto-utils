@@ -36,11 +36,14 @@ function generateKeypair () {
 
 // Returns a signature obtained by signing the hash of the input with the sk
 function sign (input, sk) {
-  if (typeof input !== 'string') input = stringify(input)
-  let inputhashBuf = Buffer.from(hash(input), 'hex')
-  let skBuf = Buffer.from(sk, 'hex')
-  let sig = sodium.crypto_sign(inputhashBuf, skBuf).toString('hex')
-  return sig
+  try {
+    let inputBuf = Buffer.from(input, 'hex')
+    let skBuf = Buffer.from(sk, 'hex')
+    let sig = sodium.crypto_sign(inputBuf, skBuf).toString('hex')
+    return sig
+  } catch (e) {
+    return false
+  }
 }
 
 // Returns true if the hash of the input was signed by the owner of the pk
@@ -49,9 +52,7 @@ function verify (input, sig, pk) {
     let sigBuf = Buffer.from(sig, 'hex')
     let pkBuf = Buffer.from(pk, 'hex')
     let sighash = sodium.crypto_sign_open(sigBuf, pkBuf).toString('hex')
-    if (typeof input !== 'string') input = stringify(input)
-    let inputhash = hash(input)
-    return sighash === inputhash
+    return sighash === input
   } catch (e) {
     return false
   }
