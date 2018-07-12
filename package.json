@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ThatOneBro/ulc-crypto-utils.git"
+    "url": "git+https://github.com/ULCproject/ulc-crypto-utils.git"
   },
   "contributors": ["Aamir Syed", "Derrick Farris"],
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ThatOneBro/ulc-crypto-utils/issues"
+    "url": "https://github.com/ULCproject/ulc-crypto-utils/issues"
   },
-  "homepage": "https://github.com/ThatOneBro/ulc-crypto-utils#readme",
+  "homepage": "https://github.com/ULCproject/ulc-crypto-utils#readme",
   "dependencies": {
   	"sodium": "*",
   	"json-stable-stringify": "*"
