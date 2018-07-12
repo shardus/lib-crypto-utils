@@ -26,7 +26,7 @@ crypto.verify(input, sig, pk)
 
 ## Install
 
-`npm install ThatOneBro/ulc-crypto-utils`
+`npm install ULCproject/ulc-crypto-utils`
 
 ## Use
 
