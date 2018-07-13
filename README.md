@@ -8,20 +8,38 @@ const crypto = require('ulc-crypto-utils')
 // Module has a constructor that takes in a 32-byte hex key as required by node-sodium for generic hashing
 crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
 
-// Returns a random 256-bit hex string
-crypto.randomBits()
+// Uses json-stable-stringify to stringify an object in a consistent sorted manner; returns a string
+crypto.stringify()
 
-// Returns the hash of the input
-crypto.hash(input)
+// Returns a random 256-bit hex string
+crypto.randomBytes()
+
+// Returns the hash of the input, output format can be specified as 'hex' or 'buffer'
+crypto.hash(input [, fmt])
+
+// Returns the hash of the provided object as a hex string
+crypto.hashObj(obj)
 
 // Generates and returns {publicKey, secretKey} as hex strings
 crypto.generateKeypair()
 
-// Returns a signature obtained by signing the input (a hash) with the sk
+// Returns a signature obtained by signing the input with the sk
 crypto.sign(input, sk)
+
+/*
+  Attaches a sign field to the input object, containing a signed version
+  of the hash of the object, along with the public key of the signer
+*/
+crypto.signObj(obj, sk, pk)
 
 // Returns true if the input was signed by the owner of the pk
 crypto.verify(input, sig, pk)
+
+/* 
+  Returns true if the hash of the object minus the sign field matches
+  the signed message in the sign field
+*/
+crypto.verifyObj(obj)
 ```
 
 ## Install
