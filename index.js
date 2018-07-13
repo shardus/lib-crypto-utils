@@ -3,11 +3,14 @@ const stringify = require('json-stable-stringify')
 
 let HASH_KEY
 
-// Returns a random 256-bit hex string
-function randomBytes () {
-  let nonce = Buffer.allocUnsafe(32)
-  sodium.randombytes_buf(nonce)
-  return nonce.toString('hex')
+// Returns 32-bytes random hex string, otherwise the number of bytes can be specified as an integer
+function randomBytes (bytes = 32) {
+  if (!Number.isInteger(bytes) || bytes <= 0) {
+    throw new TypeError('Bytes must be given as integer greater than zero.')
+  }
+  let buf = Buffer.allocUnsafe(bytes)
+  sodium.randombytes_buf(buf)
+  return buf.toString('hex')
 }
 
 // Returns the Blake2b hash of the input string or Buffer, default output type is hex
@@ -39,14 +42,28 @@ function hash (input, fmt = 'hex') {
   return output
 }
 
-// Returns the hash of the provided object as a hex string
-function hashObj (obj) {
+// Returns the hash of the provided object as a hex string, takes an optional second parameter to hash an object with the "sign" field
+function hashObj (obj, removeSign = false) {
   if (typeof obj !== 'object') {
     throw TypeError('Input must be an object.')
   }
-  let input = stringify(obj)
-  let hashed = hash(input)
-  return hashed
+  function performHash (obj) {
+    let input = stringify(obj)
+    let hashed = hash(input)
+    return hashed
+  }
+  if (removeSign) {
+    if (!obj.sign) {
+      throw Error('Object must contain a sign field if removeSign is flagged true.')
+    }
+    let signObj = obj.sign
+    delete obj.sign
+    let hashed = performHash(obj)
+    obj.sign = signObj
+    return hashed
+  } else {
+    return performHash(obj)
+  }
 }
 
 // Generates and retuns {publicKey, secretKey} as hex strings
@@ -62,7 +79,6 @@ function generateKeypair () {
 function sign (input, sk) {
   let inputBuf
   let skBuf
-
   if (typeof input !== 'string') {
     if (Buffer.isBuffer(input)) {
       inputBuf = input
@@ -150,7 +166,7 @@ function verify (msg, sig, pk) {
     let verified = sodium.crypto_sign_open(sigBuf, pkBuf).toString('hex')
     return verified === msg
   } catch (e) {
-    return false
+    throw new Error('Unable to verify provided signature with provided public key.')
   }
 }
 
@@ -168,11 +184,8 @@ function verifyObj (obj) {
   if (typeof obj.sign.sig !== 'string') {
     throw new TypeError('Signature must be a valid signature represented as a hex string.')
   }
-  let signObj = obj.sign
-  let objCopy = JSON.parse(JSON.stringify(obj))
-  delete objCopy.sign
-  let objHash = hash(stringify(objCopy))
-  return verify(objHash, signObj.sig, signObj.owner)
+  let objHash = hashObj(obj, true)
+  return verify(objHash, obj.sign.sig, obj.sign.owner)
 }
 
 function init (key) {

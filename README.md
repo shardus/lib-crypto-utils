@@ -11,14 +11,19 @@ crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
 // Uses json-stable-stringify to stringify an object in a consistent sorted manner; returns a string
 crypto.stringify(obj)
 
-// Returns a random 256-bit hex string
-crypto.randomBytes()
+/* 
+  Returns a 32-byte random hex string by default, otherwise you can
+  specify how many bytes you would like
+*/
+crypto.randomBytes([bytes])
 
 // Returns the hash of the input, output format can be specified as 'hex' or 'buffer'
 crypto.hash(input [, fmt])
 
-// Returns the hash of the provided object as a hex string
-crypto.hashObj(obj)
+/*
+  Returns the hash of the provided object as a hex string, optional parameter to hash the object without the "sig" field
+*/
+crypto.hashObj(obj [, removeSig])
 
 // Generates and returns {publicKey, secretKey} as hex strings
 crypto.generateKeypair()
