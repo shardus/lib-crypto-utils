@@ -13,7 +13,7 @@ crypto.stringify(obj)
 
 /* 
   Returns a 32-byte random hex string by default, otherwise you can
-  specify how many bytes you would like
+  specify how many bytes you would like to generate
 */
 crypto.randomBytes([bytes])
 
@@ -21,7 +21,7 @@ crypto.randomBytes([bytes])
 crypto.hash(input [, fmt])
 
 /*
-  Returns the hash of the provided object as a hex string, optional parameter to hash the object without the "sig" field (default is false, can be passed true to hash without sig)
+  Returns the hash of the provided object as a hex string, optional parameter to hash the object without the "sign" field (default is false, can be passed true to hash without "sign")
 */
 crypto.hashObj(obj [, removeSig])
 
