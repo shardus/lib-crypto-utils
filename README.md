@@ -25,7 +25,7 @@ crypto.hash(input [, fmt])
   parameter to hash the object without the "sign" field (default is
   false, can be passed true to hash without "sign")
 */
-crypto.hashObj(obj [, removeSig])
+crypto.hashObj(obj [, removeSign])
 
 // Generates and returns {publicKey, secretKey} as hex strings
 crypto.generateKeypair()
