@@ -9,7 +9,7 @@ const crypto = require('ulc-crypto-utils')
 crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
 
 // Uses json-stable-stringify to stringify an object in a consistent sorted manner; returns a string
-crypto.stringify()
+crypto.stringify(obj)
 
 // Returns a random 256-bit hex string
 crypto.randomBytes()
