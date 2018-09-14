@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ULCproject/ulc-crypto-utils.git"
+    "url": "https://gitlab.com/shardus/shardus-crypto-utils"
   },
   "contributors": ["Aamir Syed", "Derrick Farris"],
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ULCproject/ulc-crypto-utils/issues"
+    "url": "https://gitlab.com/shardus/shardus-crypto-utils/issues"
   },
-  "homepage": "https://github.com/ULCproject/ulc-crypto-utils#readme",
+  "homepage": "https://gitlab.com/shardus/shardus-crypto-utils#readme",
   "dependencies": {
   	"sodium": "*",
   	"json-stable-stringify": "*"
