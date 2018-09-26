@@ -1,4 +1,4 @@
-const sodium = require('sodium').api
+const sodium = require('sodium-native')
 const stringify = require('json-stable-stringify')
 
 let HASH_KEY
@@ -27,7 +27,8 @@ function hash (input, fmt = 'hex') {
     }
     buf = Buffer.from(input, 'utf8')
   }
-  let digest = sodium.crypto_generichash_blake2b(32, buf, HASH_KEY)
+  let digest = Buffer.allocUnsafe(32)
+  sodium.crypto_generichash(digest, buf, HASH_KEY)
   let output
   switch (fmt) {
     case 'buffer':
@@ -68,10 +69,12 @@ function hashObj (obj, removeSign = false) {
 
 // Generates and retuns {publicKey, secretKey} as hex strings
 function generateKeypair () {
-  let {publicKey: pk, secretKey: sk} = sodium.crypto_sign_keypair()
+  let publicKey = Buffer.allocUnsafe(sodium.crypto_sign_PUBLICKEYBYTES)
+  let secretKey = Buffer.allocUnsafe(sodium.crypto_sign_SECRETKEYBYTES)
+  sodium.crypto_sign_keypair(publicKey, secretKey)
   return {
-    publicKey: pk.toString('hex'),
-    secretKey: sk.toString('hex')
+    publicKey: publicKey.toString('hex'),
+    secretKey: secretKey.toString('hex')
   }
 }
 
@@ -105,13 +108,13 @@ function sign (input, sk) {
       throw new TypeError('Secret key string must be in hex format')
     }
   }
-  let sig
+  let sig = Buffer.allocUnsafe(inputBuf.length + sodium.crypto_sign_BYTES)
   try {
-    sig = sodium.crypto_sign(inputBuf, skBuf).toString('hex')
+    sodium.crypto_sign(sig, inputBuf, skBuf)
   } catch (e) {
     throw new Error('Failed to sign input with provided secret key.')
   }
-  return sig
+  return sig.toString('hex')
 }
 
 /*
@@ -163,7 +166,9 @@ function verify (msg, sig, pk) {
     throw new TypeError('Public key must be a hex string.')
   }
   try {
-    let verified = sodium.crypto_sign_open(sigBuf, pkBuf).toString('hex')
+    let opened = Buffer.allocUnsafe(sigBuf.length - sodium.crypto_sign_BYTES)
+    sodium.crypto_sign_open(opened, sigBuf, pkBuf)
+    let verified = opened.toString('hex')
     return verified === msg
   } catch (e) {
     throw new Error('Unable to verify provided signature with provided public key.')
