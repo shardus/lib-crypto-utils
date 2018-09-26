@@ -1,6 +1,6 @@
 {
   "name": "shardus-crypto-utils",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Provides simple crypto functions, as used by the ULC Project.",
   "main": "index.js",
   "scripts": {
@@ -10,14 +10,17 @@
     "type": "git",
     "url": "https://gitlab.com/shardus/shardus-crypto-utils"
   },
-  "contributors": ["Aamir Syed", "Derrick Farris"],
+  "contributors": [
+    "Aamir Syed",
+    "Derrick Farris"
+  ],
   "license": "ISC",
   "bugs": {
     "url": "https://gitlab.com/shardus/shardus-crypto-utils/issues"
   },
   "homepage": "https://gitlab.com/shardus/shardus-crypto-utils#readme",
   "dependencies": {
-  	"sodium": "*",
-  	"json-stable-stringify": "*"
+    "json-stable-stringify": "*",
+    "sodium-native": "^2.2.2"
   }
 }
