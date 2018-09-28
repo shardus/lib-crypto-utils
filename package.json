@@ -20,7 +20,7 @@
   },
   "homepage": "https://gitlab.com/shardus/shardus-crypto-utils#readme",
   "dependencies": {
-    "fastify-stable-stringify": "*",
+    "fast-stable-stringify": "*",
     "sodium-native": "^2.2.2"
   }
 }

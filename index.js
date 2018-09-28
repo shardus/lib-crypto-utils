@@ -1,5 +1,5 @@
 const sodium = require('sodium-native')
-const stringify = require('fastify-stable-stringify')
+const stringify = require('fast-stable-stringify')
 
 let HASH_KEY
 
