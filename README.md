@@ -1,9 +1,9 @@
-# ulc-crypto-utils
+# shardus-crypto-utils
 
 Provides a simple interface to node-sodium cryptographic functions, as used by the ULC Project.
 
 ```JavaScript
-const crypto = require('ulc-crypto-utils')
+const crypto = require('shardus-crypto-utils')
 
 // Module has a constructor that takes in a 32-byte hex key as required by node-sodium for generic hashing
 crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
@@ -51,12 +51,12 @@ crypto.verifyObj(obj)
 
 ## Install
 
-`npm install ULCproject/ulc-crypto-utils`
+`npm install gitlab:Shardus/shardus-crypto-utils`
 
 ## Use
 
 ```JavaScript
-const crypto = require('ulc-crypto-utils')
+const crypto = require('shardus-crypto-utils')
 crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
 
 let msg = crypto.hash('Hello world!')
