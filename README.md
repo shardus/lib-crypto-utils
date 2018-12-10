@@ -1,6 +1,6 @@
 # shardus-crypto-utils
 
-Provides a simple interface to node-sodium cryptographic functions, as used by the ULC Project.
+Provides a simple interface to node-sodium cryptographic functions, as used by the Shardus project.
 
 ```JavaScript
 const crypto = require('shardus-crypto-utils')
