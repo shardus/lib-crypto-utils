@@ -125,6 +125,10 @@ function signObj (obj, sk, pk) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
+  // If it's an array, we don't want to try to sign it
+  if (obj.length !== undefined) {
+    throw new TypeError('Input cannot be an array.')
+  }
   if (typeof sk !== 'string') {
     throw new TypeError('Secret key must be a string.')
   }
