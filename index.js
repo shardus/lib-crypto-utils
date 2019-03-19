@@ -44,7 +44,7 @@ function hash (input, fmt = 'hex') {
 }
 
 // Returns the hash of the provided object as a hex string, takes an optional second parameter to hash an object with the "sign" field
-function hashObj (obj, removeSign = false) {
+function hashObj (obj, removeSign = false, removeTag = false) {
   if (typeof obj !== 'object') {
     throw TypeError('Input must be an object.')
   }
@@ -62,6 +62,15 @@ function hashObj (obj, removeSign = false) {
     let hashed = performHash(obj)
     obj.sign = signObj
     return hashed
+  } else if (removeTag) {
+    if (!obj.tag) {
+      throw Error('Object must contain a tag field if removeTag is flagged true.')
+    }
+    let tagObj = obj.tag
+    delete obj.tag
+    let hashed = performHash(obj)
+    obj.tag = tagObj
+    return hashed
   } else {
     return performHash(obj)
   }
@@ -76,6 +85,100 @@ function generateKeypair () {
     publicKey: publicKey.toString('hex'),
     secretKey: secretKey.toString('hex')
   }
+}
+
+// Returns a curve sk represented as a hex string when given an sk
+function convertSkToCurve (sk) {
+  const skBuf = _ensureBuffer(sk)
+  const curveSkBuf = Buffer.allocUnsafe(sodium.crypto_box_SECRETKEYBYTES)
+  try {
+    sodium.crypto_sign_ed25519_sk_to_curve25519(curveSkBuf, skBuf)
+  } catch (e) {
+    throw new Error('Could not convert given secret key to curve secret key.')
+  }
+  return curveSkBuf.toString('hex')
+}
+
+// Returns a curve pk represented as a hex string when given a pk
+function convertPkToCurve (pk) {
+  const pkBuf = _ensureBuffer(pk)
+  const curvePkBuf = Buffer.allocUnsafe(sodium.crypto_box_PUBLICKEYBYTES)
+  try {
+    sodium.crypto_sign_ed25519_pk_to_curve25519(curvePkBuf, pkBuf)
+  } catch (e) {
+    throw new Error('Could not convert given public key to curve public key.')
+  }
+  return curvePkBuf.toString('hex')
+}
+
+// Returns a tag obtained by encrypting the input hash (hex string or buffer) with a key produced from the given sk and pk
+function encrypt (input, curveSk, curvePk) {
+  const inputBuf = _ensureBuffer(input)
+  const curveSkBuf = _ensureBuffer(curveSk, 'Secret key')
+  const curvePkBuf = _ensureBuffer(curvePk, 'Public key')
+  const ciphertext = Buffer.allocUnsafe(inputBuf.length + sodium.crypto_box_MACBYTES)
+  const nonce = Buffer.allocUnsafe(sodium.crypto_box_NONCEBYTES)
+  sodium.randombytes_buf(nonce)
+  sodium.crypto_box_easy(ciphertext, inputBuf, nonce, curvePkBuf, curveSkBuf)
+  const tag = [ciphertext.toString('hex'), nonce.toString('hex')]
+  return JSON.stringify(tag)
+}
+
+/**
+ * Attaches a tag field to the input object, containg an encrypted version
+ * of the hash of the object, along with the curve25519 public key of the encrypter
+ */
+function encryptObj (obj, curveSk, curvePk, recipientCurvePk) {
+  if (typeof obj !== 'object') {
+    throw new TypeError('Input must be an object.')
+  }
+  // If it's an array, we don't want to try to sign it
+  if (obj.length !== undefined) {
+    throw new TypeError('Input cannot be an array.')
+  }
+  if (typeof curveSk !== 'string') {
+    throw new TypeError('Secret key must be a string.')
+  }
+  if (typeof curvePk !== 'string') {
+    throw new TypeError('Public key must be a string.')
+  }
+  const objStr = stringify(obj)
+  const hashed = hash(objStr, 'buffer')
+  const tag = encrypt(hashed, curveSk, recipientCurvePk)
+  obj.tag = { owner: curvePk, value: tag }
+}
+
+// Returns true if the hash of the input was encypted by the owner of the pk
+function decrypt (msg, tag, curveSk, curvePk) {
+  tag = JSON.parse(tag)
+  const ciphertext = _ensureBuffer(tag[0], 'Tag ciphertext')
+  const nonce = _ensureBuffer(tag[1], 'Tag nonce')
+  const secretKey = _ensureBuffer(curveSk, 'Secret key')
+  const publicKey = _ensureBuffer(curvePk, 'Public key')
+  const message = Buffer.allocUnsafe(ciphertext.length - sodium.crypto_box_MACBYTES)
+  const isValid = sodium.crypto_box_open_easy(message, ciphertext, nonce, publicKey, secretKey)
+  const isMatch = msg === message.toString('hex')
+  return isValid && isMatch
+}
+
+/**
+ * Returns true if the hash of the object minus the tag field matches the encrypted message in the tag field
+ */
+function decryptObj (obj, curveSk) {
+  if (typeof obj !== 'object') {
+    throw new TypeError('Input must be an object.')
+  }
+  if (!obj.tag || !obj.tag.owner || !obj.tag.value) {
+    throw new Error('Object must contain a tag field with the following data: { owner, value }')
+  }
+  if (typeof obj.tag.owner !== 'string') {
+    throw new TypeError('Owner must be a public key represented as a hex string.')
+  }
+  if (typeof obj.tag.value !== 'string') {
+    throw new TypeError('Value must be a valid , 2 element array represented as a JSON string.')
+  }
+  const objHash = hashObj(obj, false, true)
+  return decrypt(objHash, obj.tag.value, curveSk, obj.tag.owner)
 }
 
 // Returns a signature obtained by signing the input hash (hex string or buffer) with the sk string
@@ -211,6 +314,22 @@ function init (key) {
   }
 }
 
+function _ensureBuffer (input, name = 'Input') {
+  if (typeof input !== 'string') {
+    if (Buffer.isBuffer(input)) {
+      return input
+    } else {
+      throw new TypeError(`${name} must be a hex string or buffer.`)
+    }
+  } else {
+    try {
+      return Buffer.from(input, 'hex')
+    } catch (e) {
+      throw new TypeError(`${name} string must be in hex format.`)
+    }
+  }
+}
+
 exports = module.exports = init
 
 exports.stringify = stringify
@@ -218,6 +337,12 @@ exports.randomBytes = randomBytes
 exports.hash = hash
 exports.hashObj = hashObj
 exports.generateKeypair = generateKeypair
+exports.convertSkToCurve = convertSkToCurve
+exports.convertPkToCurve = convertPkToCurve
+exports.encrypt = encrypt
+exports.encryptObj = encryptObj
+exports.decrypt = decrypt
+exports.decryptObj = decryptObj
 exports.sign = sign
 exports.signObj = signObj
 exports.verify = verify
