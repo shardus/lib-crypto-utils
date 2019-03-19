@@ -111,17 +111,17 @@ function convertPkToCurve (pk) {
   return curvePkBuf.toString('hex')
 }
 
-// Returns a tag obtained by encrypting the input hash (hex string or buffer) with a key produced from the given sk and pk
-function encrypt (input, curveSk, curvePk) {
-  const inputBuf = _ensureBuffer(input)
+// Returns a payload obtained by encrypting the message string with a key produced from the given sk and pk
+function encrypt (message, curveSk, curvePk) {
+  const messageBuf = Buffer.from(message, 'utf8')
   const curveSkBuf = _ensureBuffer(curveSk, 'Secret key')
   const curvePkBuf = _ensureBuffer(curvePk, 'Public key')
-  const ciphertext = Buffer.allocUnsafe(inputBuf.length + sodium.crypto_box_MACBYTES)
+  const ciphertext = Buffer.allocUnsafe(messageBuf.length + sodium.crypto_box_MACBYTES)
   const nonce = Buffer.allocUnsafe(sodium.crypto_box_NONCEBYTES)
   sodium.randombytes_buf(nonce)
-  sodium.crypto_box_easy(ciphertext, inputBuf, nonce, curvePkBuf, curveSkBuf)
-  const tag = [ciphertext.toString('hex'), nonce.toString('hex')]
-  return JSON.stringify(tag)
+  sodium.crypto_box_easy(ciphertext, messageBuf, nonce, curvePkBuf, curveSkBuf)
+  const payload = [ciphertext.toString('hex'), nonce.toString('hex')]
+  return JSON.stringify(payload)
 }
 
 /**
@@ -143,22 +143,21 @@ function encryptObj (obj, curveSk, curvePk, recipientCurvePk) {
     throw new TypeError('Public key must be a string.')
   }
   const objStr = stringify(obj)
-  const hashed = hash(objStr, 'buffer')
+  const hashed = hash(objStr, 'hex')
   const tag = encrypt(hashed, curveSk, recipientCurvePk)
   obj.tag = { owner: curvePk, value: tag }
 }
 
-// Returns true if the hash of the input was encypted by the owner of the pk
-function decrypt (msg, tag, curveSk, curvePk) {
-  tag = JSON.parse(tag)
-  const ciphertext = _ensureBuffer(tag[0], 'Tag ciphertext')
-  const nonce = _ensureBuffer(tag[1], 'Tag nonce')
+// Returns the message string obtained by decrypting the payload with the given sk and pk
+function decrypt (payload, curveSk, curvePk) {
+  payload = JSON.parse(payload)
+  const ciphertext = _ensureBuffer(payload[0], 'Tag ciphertext')
+  const nonce = _ensureBuffer(payload[1], 'Tag nonce')
   const secretKey = _ensureBuffer(curveSk, 'Secret key')
   const publicKey = _ensureBuffer(curvePk, 'Public key')
   const message = Buffer.allocUnsafe(ciphertext.length - sodium.crypto_box_MACBYTES)
   const isValid = sodium.crypto_box_open_easy(message, ciphertext, nonce, publicKey, secretKey)
-  const isMatch = msg === message.toString('hex')
-  return isValid && isMatch
+  return { isValid, message: message.toString('utf8') }
 }
 
 /**
@@ -178,7 +177,8 @@ function decryptObj (obj, curveSk) {
     throw new TypeError('Value must be a valid , 2 element array represented as a JSON string.')
   }
   const objHash = hashObj(obj, false, true)
-  return decrypt(objHash, obj.tag.value, curveSk, obj.tag.owner)
+  const { isValid, message } = decrypt(obj.tag.value, curveSk, obj.tag.owner)
+  return isValid && (message === objHash)
 }
 
 // Returns a signature obtained by signing the input hash (hex string or buffer) with the sk string
