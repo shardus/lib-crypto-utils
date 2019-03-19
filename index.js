@@ -128,7 +128,7 @@ function encrypt (message, curveSk, curvePk) {
  * Attaches a tag field to the input object, containg an encrypted version
  * of the hash of the object, along with the curve25519 public key of the encrypter
  */
-function encryptObj (obj, curveSk, curvePk, recipientCurvePk) {
+function tagObj (obj, curveSk, curvePk, recipientCurvePk) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
@@ -163,7 +163,7 @@ function decrypt (payload, curveSk, curvePk) {
 /**
  * Returns true if the hash of the object minus the tag field matches the encrypted message in the tag field
  */
-function decryptObj (obj, curveSk) {
+function verifyTag (obj, curveSk) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
@@ -340,9 +340,9 @@ exports.generateKeypair = generateKeypair
 exports.convertSkToCurve = convertSkToCurve
 exports.convertPkToCurve = convertPkToCurve
 exports.encrypt = encrypt
-exports.encryptObj = encryptObj
+exports.tagObj = tagObj
 exports.decrypt = decrypt
-exports.decryptObj = decryptObj
+exports.verifyTag = verifyTag
 exports.sign = sign
 exports.signObj = signObj
 exports.verify = verify

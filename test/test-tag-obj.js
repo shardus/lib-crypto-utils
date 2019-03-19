@@ -16,10 +16,10 @@ alice.curveSk = crypto.convertSkToCurve(alice.sk)
 function tryEncrypting () {
   console.log('Bob encrypting object...')
   const obj = { thing1: 1, thing2: 2 }
-  crypto.encryptObj(obj, bob.curveSk, bob.curvePk, alice.curvePk)
+  crypto.tagObj(obj, bob.curveSk, bob.curvePk, alice.curvePk)
   console.log(obj)
   console.log('Alice decrypting object...')
-  console.log(crypto.decryptObj(obj, alice.curveSk))
+  console.log(crypto.verifyTag(obj, alice.curveSk))
 }
 
 tryEncrypting()
