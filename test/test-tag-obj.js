@@ -13,6 +13,7 @@ const alice = {}
 alice.curvePk = crypto.convertPkToCurve(alice.pk)
 alice.curveSk = crypto.convertSkToCurve(alice.sk)
 
+/*
 function tryEncrypting () {
   console.log('Bob encrypting object...')
   const obj = { thing1: 1, thing2: 2 }
@@ -21,5 +22,21 @@ function tryEncrypting () {
   console.log('Alice decrypting object...')
   console.log(crypto.verifyTag(obj, alice.curveSk))
 }
-
 tryEncrypting()
+*/
+
+function tryTaggingObj () {
+  const obj = { thing1: 1, thing2: 2 }
+  console.log('Object:')
+  console.log(obj)
+  console.log()
+
+  console.log('Bob tags object...')
+  crypto.tagObj(obj, bob.curveSk, alice.curvePk)
+  console.log(obj)
+  console.log()
+
+  console.log('Alice authenticates CHANGED object...')
+  console.log(crypto.authenticateObj(obj, alice.curveSk, bob.curvePk))
+}
+tryTaggingObj()

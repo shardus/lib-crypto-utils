@@ -1,5 +1,6 @@
 const sodium = require('sodium-native')
 const stringify = require('fast-stable-stringify')
+const xor = require('buffer-xor/inplace')
 
 let HASH_KEY
 
@@ -111,7 +112,7 @@ function convertPkToCurve (pk) {
   return curvePkBuf.toString('hex')
 }
 
-// Returns a payload obtained by encrypting the message string with a key produced from the given sk and pk
+// Returns a payload obtained by encrypting and tagging the message string with a key produced from the given sk and pk
 function encrypt (message, curveSk, curvePk) {
   const messageBuf = Buffer.from(message, 'utf8')
   const curveSkBuf = _ensureBuffer(curveSk, 'Secret key')
@@ -124,11 +125,38 @@ function encrypt (message, curveSk, curvePk) {
   return JSON.stringify(payload)
 }
 
+// Returns the message string obtained by decrypting the payload with the given sk and pk and authenticating the attached tag
+function decrypt (payload, curveSk, curvePk) {
+  payload = JSON.parse(payload)
+  const ciphertext = _ensureBuffer(payload[0], 'Tag ciphertext')
+  const nonce = _ensureBuffer(payload[1], 'Tag nonce')
+  const secretKey = _ensureBuffer(curveSk, 'Secret key')
+  const publicKey = _ensureBuffer(curvePk, 'Public key')
+  const message = Buffer.allocUnsafe(ciphertext.length - sodium.crypto_box_MACBYTES)
+  const isValid = sodium.crypto_box_open_easy(message, ciphertext, nonce, publicKey, secretKey)
+  return { isValid, message: message.toString('utf8') }
+}
+
+// Returns an authentication tag obtained by encrypting the hash of the message string with a key produced from the given sk and pk
+function tag (message, curveSk, curvePk) {
+  const messageBuf = Buffer.from(message, 'utf8')
+
+  const nonceBuf = Buffer.allocUnsafe(sodium.crypto_auth_BYTES)
+  sodium.randombytes_buf(nonceBuf)
+  const nonce = nonceBuf.toString('hex')
+  const keyBuf = _generateSharedKey(curveSk, curvePk, nonce)
+
+  const tagBuf = Buffer.allocUnsafe(sodium.crypto_auth_BYTES)
+  sodium.crypto_auth(tagBuf, messageBuf, keyBuf)
+
+  const tag = tagBuf.toString('hex')
+  return tag + nonce
+}
+
 /**
- * Attaches a tag field to the input object, containg an encrypted version
- * of the hash of the object, along with the curve25519 public key of the encrypter
+ * Attaches a tag field to the input object, containg an authentication tag for the obj
  */
-function tagObj (obj, curveSk, curvePk, recipientCurvePk) {
+function tagObj (obj, curveSk, curvePk) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
@@ -143,42 +171,36 @@ function tagObj (obj, curveSk, curvePk, recipientCurvePk) {
     throw new TypeError('Public key must be a string.')
   }
   const objStr = stringify(obj)
-  const hashed = hash(objStr, 'hex')
-  const tag = encrypt(hashed, curveSk, recipientCurvePk)
-  obj.tag = { owner: curvePk, value: tag }
+  obj.tag = tag(objStr, curveSk, curvePk)
 }
 
-// Returns the message string obtained by decrypting the payload with the given sk and pk
-function decrypt (payload, curveSk, curvePk) {
-  payload = JSON.parse(payload)
-  const ciphertext = _ensureBuffer(payload[0], 'Tag ciphertext')
-  const nonce = _ensureBuffer(payload[1], 'Tag nonce')
-  const secretKey = _ensureBuffer(curveSk, 'Secret key')
-  const publicKey = _ensureBuffer(curvePk, 'Public key')
-  const message = Buffer.allocUnsafe(ciphertext.length - sodium.crypto_box_MACBYTES)
-  const isValid = sodium.crypto_box_open_easy(message, ciphertext, nonce, publicKey, secretKey)
-  return { isValid, message: message.toString('utf8') }
+// Returns true if tag is a valid authentication tag for message string
+function authenticate (message, tag, curveSk, curvePk) {
+  const nonce = tag.substring(sodium.crypto_auth_BYTES * 2)
+  tag = tag.substring(0, sodium.crypto_auth_BYTES * 2)
+  const tagBuf = _ensureBuffer(tag, 'Tag')
+
+  const keyBuf = _generateSharedKey(curveSk, curvePk, nonce)
+
+  const messageBuf = Buffer.from(message, 'utf8')
+  return sodium.crypto_auth_verify(tagBuf, messageBuf, keyBuf)
 }
 
 /**
- * Returns true if the hash of the object minus the tag field matches the encrypted message in the tag field
+ * Returns true if the authentication tag is a valid tag for the object minus the tag field
  */
-function verifyTag (obj, curveSk) {
+function authenticateObj (obj, curveSk, curvePk) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
-  if (!obj.tag || !obj.tag.owner || !obj.tag.value) {
-    throw new Error('Object must contain a tag field with the following data: { owner, value }')
+  if (!obj.tag) {
+    throw new Error('Object must contain a tag field')
   }
-  if (typeof obj.tag.owner !== 'string') {
-    throw new TypeError('Owner must be a public key represented as a hex string.')
-  }
-  if (typeof obj.tag.value !== 'string') {
-    throw new TypeError('Value must be a valid , 2 element array represented as a JSON string.')
-  }
-  const objHash = hashObj(obj, false, true)
-  const { isValid, message } = decrypt(obj.tag.value, curveSk, obj.tag.owner)
-  return isValid && (message === objHash)
+  const tag = obj.tag
+  delete obj.tag
+  const objStr = stringify(obj)
+  obj.tag = tag
+  return authenticate(objStr, tag, curveSk, curvePk)
 }
 
 // Returns a signature obtained by signing the input hash (hex string or buffer) with the sk string
@@ -330,6 +352,18 @@ function _ensureBuffer (input, name = 'Input') {
   }
 }
 
+function _generateSharedKey (curveSk, curvePk, nonce) {
+  const curveSkBuf = _ensureBuffer(curveSk)
+  const curvePkBuf = _ensureBuffer(curvePk)
+  const nonceBuf = _ensureBuffer(nonce)
+
+  const keyBuf = Buffer.allocUnsafe(sodium.crypto_scalarmult_BYTES)
+  sodium.crypto_scalarmult(keyBuf, curveSkBuf, curvePkBuf)
+
+  xor(keyBuf, nonceBuf)
+  return keyBuf
+}
+
 exports = module.exports = init
 
 exports.stringify = stringify
@@ -340,9 +374,11 @@ exports.generateKeypair = generateKeypair
 exports.convertSkToCurve = convertSkToCurve
 exports.convertPkToCurve = convertPkToCurve
 exports.encrypt = encrypt
-exports.tagObj = tagObj
 exports.decrypt = decrypt
-exports.verifyTag = verifyTag
+exports.tag = tag
+exports.tagObj = tagObj
+exports.authenticate = authenticate
+exports.authenticateObj = authenticateObj
 exports.sign = sign
 exports.signObj = signObj
 exports.verify = verify
