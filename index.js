@@ -352,16 +352,18 @@ function init (key, { threads = 0 } = {}) {
     throw new TypeError('Hash key must be a 32-byte string.')
   }
 
-  if (_exists(threads)) {
-    if (typeof threads !== 'number' || threads < 0) throw new TypeError('Threads must be a number >= 0.')
-    if (threads > 0) {
-      workerpool.worker({
-        tag: tag,
-        authenticate: authenticate,
-        sign: sign,
-        verify: verify
-      })
-      POOL = workerpool.pool(join(__dirname, '/index.js'), { nodeWorker: 'process' })
+  if (_exists(threads) && threads !== 0) {
+    if ((typeof threads !== 'number' && threads !== 'auto') || threads < 0) throw new TypeError("Threads must be a number >= 0 or 'auto'.")
+    workerpool.worker({
+      tag: tag,
+      authenticate: authenticate,
+      sign: sign,
+      verify: verify
+    })
+    if (threads === 'auto') {
+      POOL = workerpool.pool(join(__dirname, '/worker-fns.js'), { nodeWorker: 'process' })
+    } else {
+      POOL = workerpool.pool(join(__dirname, '/worker-fns.js'), { nodeWorker: 'process', minWorkers: threads, maxWorkers: threads })
     }
   }
 }

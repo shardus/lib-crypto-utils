@@ -1,7 +1,7 @@
 const crypto = require('../index.js')
 
 const nonce = crypto.randomBytes()
-crypto(nonce, { threads: 1 })
+crypto(nonce, { threads: 'auto' })
 
 const NUM = 50000
 
