@@ -57,7 +57,10 @@ crypto.verifyObj(obj)
 
 ```JavaScript
 const crypto = require('shardus-crypto-utils')
-crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
+
+crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347') // No threading
+crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347', { threads: 'auto' })
+crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347', { threads: 4 })
 
 let msg = crypto.hash('Hello world!')
 console.log(msg)
