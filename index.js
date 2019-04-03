@@ -1,8 +1,11 @@
+const { join } = require('path')
 const sodium = require('sodium-native')
 const stringify = require('fast-stable-stringify')
 const xor = require('buffer-xor')
+const workerpool = require('workerpool')
 
 let HASH_KEY
+let POOL
 
 // Returns 32-bytes random hex string, otherwise the number of bytes can be specified as an integer
 function randomBytes (bytes = 32) {
@@ -156,7 +159,7 @@ function tag (message, sharedKey) {
 /**
  * Attaches a tag field to the input object, containg an authentication tag for the obj
  */
-function tagObj (obj, sharedKey) {
+async function tagObj (obj, sharedKey) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
@@ -168,7 +171,11 @@ function tagObj (obj, sharedKey) {
     throw new TypeError('Shared key must be a hex string or hex buffer.')
   }
   const objStr = stringify(obj)
-  obj.tag = tag(objStr, sharedKey)
+  if (_exists(POOL)) {
+    obj.tag = await POOL.exec('tag', [objStr, sharedKey])
+  } else {
+    obj.tag = tag(objStr, sharedKey)
+  }
 }
 
 // Returns true if tag is a valid authentication tag for message string
@@ -186,7 +193,7 @@ function authenticate (message, tag, sharedKey) {
 /**
  * Returns true if the authentication tag is a valid tag for the object minus the tag field
  */
-function authenticateObj (obj, sharedKey) {
+async function authenticateObj (obj, sharedKey) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
@@ -197,7 +204,11 @@ function authenticateObj (obj, sharedKey) {
   delete obj.tag
   const objStr = stringify(obj)
   obj.tag = tag
-  return authenticate(objStr, tag, sharedKey)
+  if (_exists(POOL)) {
+    return POOL.exec('authenticate', [objStr, tag, sharedKey])
+  } else {
+    return authenticate(objStr, tag, sharedKey)
+  }
 }
 
 // Returns a signature obtained by signing the input hash (hex string or buffer) with the sk string
@@ -243,7 +254,7 @@ function sign (input, sk) {
   Attaches a sign field to the input object, containing a signed version
   of the hash of the object, along with the public key of the signer
 */
-function signObj (obj, sk, pk) {
+async function signObj (obj, sk, pk) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
@@ -258,8 +269,13 @@ function signObj (obj, sk, pk) {
     throw new TypeError('Public key must be a string.')
   }
   let objStr = stringify(obj)
-  let hashed = hash(objStr, 'buffer')
-  let sig = sign(hashed, sk)
+  let hashed = hash(objStr, _exists(POOL) ? 'hex' : 'buffer')
+  let sig
+  if (_exists(POOL)) {
+    sig = await POOL.exec('sign', [hashed, sk])
+  } else {
+    sig = sign(hashed, sk)
+  }
   obj.sign = { owner: pk, sig }
 }
 
@@ -302,7 +318,7 @@ function verify (msg, sig, pk) {
 }
 
 // Returns true if the hash of the object minus the sign field matches the signed message in the sign field
-function verifyObj (obj) {
+async function verifyObj (obj) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
@@ -316,10 +332,14 @@ function verifyObj (obj) {
     throw new TypeError('Signature must be a valid signature represented as a hex string.')
   }
   let objHash = hashObj(obj, true)
-  return verify(objHash, obj.sign.sig, obj.sign.owner)
+  if (_exists(POOL)) {
+    return POOL.exec('verify', [objHash, obj.sign.sig, obj.sign.owner])
+  } else {
+    return verify(objHash, obj.sign.sig, obj.sign.owner)
+  }
 }
 
-function init (key) {
+function init (key, { threads = 0 } = {}) {
   if (!key) {
     throw new Error('Hash key must be passed to module constructor.')
   }
@@ -330,6 +350,25 @@ function init (key) {
     }
   } catch (e) {
     throw new TypeError('Hash key must be a 32-byte string.')
+  }
+
+  if (_exists(threads)) {
+    if (typeof threads !== 'number' || threads < 0) throw new TypeError('Threads must be a number >= 0.')
+    if (threads > 0) {
+      workerpool.worker({
+        tag: tag,
+        authenticate: authenticate,
+        sign: sign,
+        verify: verify
+      })
+      POOL = workerpool.pool(join(__dirname, '/index.js'), { nodeWorker: 'process' })
+    }
+  }
+}
+
+function cleanup () {
+  if (_exists(POOL)) {
+    POOL.terminate()
   }
 }
 
@@ -365,6 +404,10 @@ function _getAuthKey (sharedKey, nonce) {
   return resultBuf
 }
 
+function _exists (thing) {
+  return (typeof thing !== 'undefined' && thing !== null)
+}
+
 exports = module.exports = init
 
 exports.stringify = stringify
@@ -385,3 +428,4 @@ exports.signObj = signObj
 exports.verify = verify
 exports.verifyObj = verifyObj
 exports.generateSharedKey = generateSharedKey
+exports.cleanup = cleanup
