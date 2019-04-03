@@ -1,6 +1,6 @@
 const sodium = require('sodium-native')
 const stringify = require('fast-stable-stringify')
-const xor = require('buffer-xor/inplace')
+const xor = require('buffer-xor')
 
 let HASH_KEY
 
@@ -361,8 +361,8 @@ function generateSharedKey (curveSk, curvePk) {
 function _getAuthKey (sharedKey, nonce) {
   const sharedKeyBuf = _ensureBuffer(sharedKey)
   const nonceBuf = _ensureBuffer(nonce)
-  xor(sharedKeyBuf, nonceBuf)
-  return sharedKeyBuf
+  const resultBuf = xor(sharedKeyBuf, nonceBuf)
+  return resultBuf
 }
 
 exports = module.exports = init
