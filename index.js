@@ -138,13 +138,13 @@ function decrypt (payload, curveSk, curvePk) {
 }
 
 // Returns an authentication tag obtained by encrypting the hash of the message string with a key produced from the given sk and pk
-function tag (message, curveSk, curvePk) {
+function tag (message, sharedKey) {
   const messageBuf = Buffer.from(message, 'utf8')
 
   const nonceBuf = Buffer.allocUnsafe(sodium.crypto_auth_BYTES)
   sodium.randombytes_buf(nonceBuf)
   const nonce = nonceBuf.toString('hex')
-  const keyBuf = _generateSharedKey(curveSk, curvePk, nonce)
+  const keyBuf = _getAuthKey(sharedKey, nonce)
 
   const tagBuf = Buffer.allocUnsafe(sodium.crypto_auth_BYTES)
   sodium.crypto_auth(tagBuf, messageBuf, keyBuf)
@@ -156,7 +156,7 @@ function tag (message, curveSk, curvePk) {
 /**
  * Attaches a tag field to the input object, containg an authentication tag for the obj
  */
-function tagObj (obj, curveSk, curvePk) {
+function tagObj (obj, sharedKey) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
@@ -164,23 +164,20 @@ function tagObj (obj, curveSk, curvePk) {
   if (obj.length !== undefined) {
     throw new TypeError('Input cannot be an array.')
   }
-  if (typeof curveSk !== 'string') {
-    throw new TypeError('Secret key must be a string.')
-  }
-  if (typeof curvePk !== 'string') {
-    throw new TypeError('Public key must be a string.')
+  if (typeof sharedKey !== 'string' && !Buffer.isBuffer(sharedKey)) {
+    throw new TypeError('Shared key must be a hex string or hex buffer.')
   }
   const objStr = stringify(obj)
-  obj.tag = tag(objStr, curveSk, curvePk)
+  obj.tag = tag(objStr, sharedKey)
 }
 
 // Returns true if tag is a valid authentication tag for message string
-function authenticate (message, tag, curveSk, curvePk) {
+function authenticate (message, tag, sharedKey) {
   const nonce = tag.substring(sodium.crypto_auth_BYTES * 2)
   tag = tag.substring(0, sodium.crypto_auth_BYTES * 2)
   const tagBuf = _ensureBuffer(tag, 'Tag')
 
-  const keyBuf = _generateSharedKey(curveSk, curvePk, nonce)
+  const keyBuf = _getAuthKey(sharedKey, nonce)
 
   const messageBuf = Buffer.from(message, 'utf8')
   return sodium.crypto_auth_verify(tagBuf, messageBuf, keyBuf)
@@ -189,7 +186,7 @@ function authenticate (message, tag, curveSk, curvePk) {
 /**
  * Returns true if the authentication tag is a valid tag for the object minus the tag field
  */
-function authenticateObj (obj, curveSk, curvePk) {
+function authenticateObj (obj, sharedKey) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
@@ -200,7 +197,7 @@ function authenticateObj (obj, curveSk, curvePk) {
   delete obj.tag
   const objStr = stringify(obj)
   obj.tag = tag
-  return authenticate(objStr, tag, curveSk, curvePk)
+  return authenticate(objStr, tag, sharedKey)
 }
 
 // Returns a signature obtained by signing the input hash (hex string or buffer) with the sk string
@@ -352,16 +349,20 @@ function _ensureBuffer (input, name = 'Input') {
   }
 }
 
-function _generateSharedKey (curveSk, curvePk, nonce) {
+function generateSharedKey (curveSk, curvePk) {
   const curveSkBuf = _ensureBuffer(curveSk)
   const curvePkBuf = _ensureBuffer(curvePk)
-  const nonceBuf = _ensureBuffer(nonce)
 
   const keyBuf = Buffer.allocUnsafe(sodium.crypto_scalarmult_BYTES)
   sodium.crypto_scalarmult(keyBuf, curveSkBuf, curvePkBuf)
-
-  xor(keyBuf, nonceBuf)
   return keyBuf
+}
+
+function _getAuthKey (sharedKey, nonce) {
+  const sharedKeyBuf = _ensureBuffer(sharedKey)
+  const nonceBuf = _ensureBuffer(nonce)
+  xor(sharedKeyBuf, nonceBuf)
+  return sharedKeyBuf
 }
 
 exports = module.exports = init
@@ -383,3 +384,4 @@ exports.sign = sign
 exports.signObj = signObj
 exports.verify = verify
 exports.verifyObj = verifyObj
+exports.generateSharedKey = generateSharedKey
