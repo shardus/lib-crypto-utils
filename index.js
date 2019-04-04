@@ -354,17 +354,9 @@ function init (key, { threads = 0 } = {}) {
 
   if (_exists(threads) && threads !== 0) {
     if ((typeof threads !== 'number' && threads !== 'auto') || threads < 0) throw new TypeError("Threads must be a number >= 0 or 'auto'.")
-    workerpool.worker({
-      tag: tag,
-      authenticate: authenticate,
-      sign: sign,
-      verify: verify
-    })
-    if (threads === 'auto') {
-      POOL = workerpool.pool(join(__dirname, '/worker-fns.js'), { nodeWorker: 'process' })
-    } else {
-      POOL = workerpool.pool(join(__dirname, '/worker-fns.js'), { nodeWorker: 'process', minWorkers: threads, maxWorkers: threads })
-    }
+    const opts = { nodeWorker: 'process' }
+    if (threads > 0) Object.assign(opts, { minWorkers: threads, maxWorkers: threads })
+    POOL = workerpool.pool(join(__dirname, '/index.js'), opts)
   }
 }
 
@@ -396,7 +388,7 @@ function generateSharedKey (curveSk, curvePk) {
 
   const keyBuf = Buffer.allocUnsafe(sodium.crypto_scalarmult_BYTES)
   sodium.crypto_scalarmult(keyBuf, curveSkBuf, curvePkBuf)
-  return keyBuf
+  return _exists(POOL) ? keyBuf.toString('hex') : keyBuf
 }
 
 function _getAuthKey (sharedKey, nonce) {
@@ -408,6 +400,15 @@ function _getAuthKey (sharedKey, nonce) {
 
 function _exists (thing) {
   return (typeof thing !== 'undefined' && thing !== null)
+}
+
+if (process.send) {
+  workerpool.worker({
+    tag: tag,
+    authenticate: authenticate,
+    sign: sign,
+    verify: verify
+  })
 }
 
 exports = module.exports = init

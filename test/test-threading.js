@@ -35,15 +35,18 @@ function tagAuthenticateTest () {
   alice.curvePk = crypto.convertPkToCurve(alice.pk)
   alice.curveSk = crypto.convertSkToCurve(alice.sk)
 
+  alice.sharedKey = crypto.generateSharedKey(alice.curveSk, bob.curvePk)
+  bob.sharedKey = crypto.generateSharedKey(bob.curveSk, alice.curvePk)
+
   const objs = new Array(NUM).fill().map(() => { return { a: 1, b: 2 } })
 
   console.log(`Tagging ${NUM} objs...`)
-  return Promise.all(objs.map(obj => crypto.tagObj(obj, bob.curveSk, alice.curvePk)))
+  return Promise.all(objs.map(obj => crypto.tagObj(obj, bob.sharedKey)))
     .then(() => {
       console.log('Tagging done.')
       console.log(objs[objs.length - 1])
       console.log(`Authenticating ${NUM} objs...`)
-      return Promise.all(objs.map(obj => crypto.authenticateObj(obj, alice.curveSk, bob.curvePk)))
+      return Promise.all(objs.map(obj => crypto.authenticateObj(obj, alice.sharedKey)))
     })
     .then((results) => {
       console.log('Authenticating done.')
