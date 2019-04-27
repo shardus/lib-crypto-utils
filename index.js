@@ -54,17 +54,39 @@ function init (key, { threads = 0 } = {}) {
 
 // function hash (msg: string) : string {}
 // Returns the Blake2b hash of the input string or Buffer, default output type is hex
-function hash (msg) {
-  const msgBuf = _ensureBuffer(msg, 'Msg')
-  const hashBuf = sodium.crypto_hash_sha256(msgBuf, HASH_KEY)
-  return hashBuf.toString('hex')
+function hash (input, fmt = 'hex') {
+  if (!HASH_KEY) {
+    throw new Error('Hash key must be passed to module constructor.')
+  }
+  let buf
+  if (Buffer.isBuffer(input)) {
+    buf = input
+  } else {
+    if (typeof input !== 'string') {
+      throw new TypeError('Input must be a string or buffer.')
+    }
+    buf = Buffer.from(input, 'utf8')
+  }
+  const digest = sodium.crypto_generichash(32, buf, HASH_KEY)
+  let output
+  switch (fmt) {
+    case 'buffer':
+      output = digest
+      break
+    case 'hex':
+      output = digest.toString('hex')
+      break
+    default:
+      throw Error('Invalid type for output format.')
+  }
+  return output
 }
 // function sign (msg: string, sk: string) : Promise<string> {}
 // Returns a signature obtained by signing the input hash (hex string or buffer) with the sk string
 function sign (msg, sk) {
   return new Promise((resolve, reject) => {
-    const msgArr = utf8Encoder.encode(msg).buffer
-    const skArr = Uint8Array.from(Buffer.from(sk, 'hex')).buffer
+    const msgArr = Uint8Array.from(_ensureBuffer(msg, 'msg')).buffer
+    const skArr = Uint8Array.from(_ensureBuffer(sk, 'sk')).buffer
     if (FAST_POOL) {
       FAST_POOL.run(0, [msgArr, skArr], _generateCallback(resolve, reject, result => Buffer.from(result).toString('hex')))
     } else {
@@ -84,7 +106,7 @@ function verify (msg, sig, pk) {
     const sigArr = Uint8Array.from(Buffer.from(sig, 'hex')).buffer
     const pkArr = Uint8Array.from(Buffer.from(pk, 'hex')).buffer
     function gotResult (result) {
-      const opened = Buffer.from(result).toString('utf8')
+      const opened = Buffer.from(result).toString('hex')
       resolve(opened === msg)
     }
     if (FAST_POOL) {
@@ -120,7 +142,7 @@ function tag (msg, sharedKey) {
 function authenticate (msg, tag, sharedKey) {
   const nonce = tag.substring(sodium.crypto_auth_BYTES * 2)
   tag = tag.substring(0, sodium.crypto_auth_BYTES * 2)
-  const tagBuf = _ensureBuffer(tag, 'Tag')
+  const tagBuf = _ensureBuffer(tag, 'tag')
 
   const keyBuf = _getAuthKey(sharedKey, nonce)
 
@@ -180,7 +202,7 @@ async function signObj (obj, sk, pk) {
     throw new TypeError('Public key must be a string.')
   }
   let objStr = stringify(obj)
-  let hashed = hash(objStr)
+  let hashed = hash(objStr, 'buffer')
   let sig = await sign(hashed, sk)
   obj.sign = { owner: pk, sig }
 }
@@ -255,7 +277,7 @@ function generateKeypair () {
 // function convertSkToCurve (sk: string) : string {}
 // Returns a curve sk represented as a hex string when given an sk
 function convertSkToCurve (sk) {
-  const skBuf = _ensureBuffer(sk)
+  const skBuf = _ensureBuffer(sk, 'sk')
   let curveSkBuf
   try {
     curveSkBuf = sodium.crypto_sign_ed25519_sk_to_curve25519(skBuf)
@@ -267,7 +289,7 @@ function convertSkToCurve (sk) {
 // function convertPkToCurve (pk: string) : string {}
 // Returns a curve pk represented as a hex string when given a pk
 function convertPkToCurve (pk) {
-  const pkBuf = _ensureBuffer(pk)
+  const pkBuf = _ensureBuffer(pk, 'pk')
   let curvePkBuf
   try {
     curvePkBuf = sodium.crypto_sign_ed25519_pk_to_curve25519(pkBuf)
@@ -279,8 +301,8 @@ function convertPkToCurve (pk) {
 // function generateSharedKey (curveSk: string, curvePk: string) : string {}
 // Computes and returns a sharedKey from the given curveSk and curvePk
 function generateSharedKey (curveSk, curvePk) {
-  const curveSkBuf = _ensureBuffer(curveSk)
-  const curvePkBuf = _ensureBuffer(curvePk)
+  const curveSkBuf = _ensureBuffer(curveSk, 'curveSk')
+  const curvePkBuf = _ensureBuffer(curvePk, 'curvePk')
   let keyBuf
   keyBuf = sodium.crypto_scalarmult(curveSkBuf, curvePkBuf)
   return keyBuf.toString('hex')
@@ -300,24 +322,24 @@ function _generateCallback (resolve, reject, transformation) {
     }
   }
 }
-function _ensureBuffer (input, name = 'Input') {
+function _ensureBuffer (input, name = 'Input', { encoding = 'hex' } = {}) {
   if (typeof input !== 'string') {
     if (Buffer.isBuffer(input)) {
       return input
     } else {
-      throw new TypeError(`${name} must be a hex string or buffer.`)
+      throw new TypeError(`${name} must be a string or buffer.`)
     }
   } else {
     try {
-      return Buffer.from(input, 'hex')
+      return Buffer.from(input, encoding)
     } catch (e) {
-      throw new TypeError(`${name} string must be in hex format.`)
+      throw new TypeError(`${name} string could not be converted to a buffer.`)
     }
   }
 }
 function _getAuthKey (sharedKey, nonce) {
-  const sharedKeyBuf = _ensureBuffer(sharedKey)
-  const nonceBuf = _ensureBuffer(nonce)
+  const sharedKeyBuf = _ensureBuffer(sharedKey, 'sharedKey')
+  const nonceBuf = _ensureBuffer(nonce, 'nonce')
   const resultBuf = xor(sharedKeyBuf, nonceBuf)
   return resultBuf
 }
@@ -339,6 +361,7 @@ exports.verifyObj = verifyObj
 exports.tagObj = tagObj
 exports.authenticateObj = authenticateObj
 
+exports.stringify = stringify
 exports.randomBytes = randomBytes
 exports.generateKeypair = generateKeypair
 exports.convertSkToCurve = convertSkToCurve
