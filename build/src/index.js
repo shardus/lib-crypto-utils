@@ -19,6 +19,7 @@ function randomBytes(bytes = 32) {
     sodium.randombytes_buf(buf);
     return buf.toString('hex');
 }
+exports.randomBytes = randomBytes;
 /**
  * Returns the Blake2b hash of the input string or Buffer, default output type is hex
  * @param input
@@ -53,6 +54,7 @@ function hash(input, fmt = 'hex') {
     }
     return output;
 }
+exports.hash = hash;
 /**
  * Returns the hash of the provided object as a hex string, takes an optional second parameter to hash an object with the "sign" field
  * @param obj
@@ -92,6 +94,7 @@ function hashObj(obj, removeSign = false, removeTag = false) {
         return performHash(obj);
     }
 }
+exports.hashObj = hashObj;
 /**
  * Generates and retuns { publicKey, secretKey } as hex strings
  */
@@ -104,6 +107,7 @@ function generateKeypair() {
         secretKey: secretKey.toString('hex')
     };
 }
+exports.generateKeypair = generateKeypair;
 /**
  * Returns a curve sk represented as a hex string when given an sk
  * @param sk
@@ -119,6 +123,7 @@ function convertSkToCurve(sk) {
     }
     return curveSkBuf.toString('hex');
 }
+exports.convertSkToCurve = convertSkToCurve;
 /**
  * Returns a curve pk represented as a hex string when given a pk
  * @param pk
@@ -134,6 +139,7 @@ function convertPkToCurve(pk) {
     }
     return curvePkBuf.toString('hex');
 }
+exports.convertPkToCurve = convertPkToCurve;
 /**
  * Returns a payload obtained by encrypting and tagging the message string with a key produced from the given sk and pk
  * @param message
@@ -151,6 +157,7 @@ function encrypt(message, curveSk, curvePk) {
     const payload = [ciphertext.toString('hex'), nonce.toString('hex')];
     return JSON.stringify(payload);
 }
+exports.encrypt = encrypt;
 /**
  * Returns the message string obtained by decrypting the payload with the given sk and pk and authenticating the attached tag
  * @param payload
@@ -167,6 +174,7 @@ function decrypt(payload, curveSk, curvePk) {
     const isValid = sodium.crypto_box_open_easy(message, ciphertext, nonce, publicKey, secretKey);
     return { isValid, message: message.toString('utf8') };
 }
+exports.decrypt = decrypt;
 /**
  * Returns an authentication tag obtained by encrypting the hash of the message string with a key produced from the given sk and pk
  * @param message
@@ -183,6 +191,7 @@ function tag(message, sharedKey) {
     const tag = tagBuf.toString('hex');
     return tag + nonce;
 }
+exports.tag = tag;
 /**
  * Attaches a tag field to the input object, containg an authentication tag for the obj
  * @param obj
@@ -202,6 +211,7 @@ function tagObj(obj, sharedKey) {
     const objStr = stringify(obj);
     obj.tag = tag(objStr, sharedKey);
 }
+exports.tagObj = tagObj;
 /**
  * Returns true if tag is a valid authentication tag for message string
  * @param message
@@ -216,6 +226,7 @@ function authenticate(message, tag, sharedKey) {
     const messageBuf = Buffer.from(message, 'utf8');
     return sodium.crypto_auth_verify(tagBuf, messageBuf, keyBuf);
 }
+exports.authenticate = authenticate;
 /**
  * Returns true if the authentication tag is a valid tag for the object minus the tag field
  * @param obj
@@ -234,6 +245,7 @@ function authenticateObj(obj, sharedKey) {
     obj.tag = tag;
     return authenticate(objStr, tag, sharedKey);
 }
+exports.authenticateObj = authenticateObj;
 /**
  * Returns a signature obtained by signing the input hash (hex string or buffer) with the sk string
  * @param input
@@ -283,6 +295,7 @@ function sign(input, sk) {
     }
     return sig.toString('hex');
 }
+exports.sign = sign;
 /**
  * Attaches a sign field to the input object, containing a signed version of the hash of the object,
  * along with the public key of the signer
@@ -309,6 +322,7 @@ function signObj(obj, sk, pk) {
     const sig = sign(hashed, sk);
     obj.sign = { owner: pk, sig };
 }
+exports.signObj = signObj;
 /**
  * Returns true if the hash of the input was signed by the owner of the pk
  * @param msg
@@ -356,6 +370,7 @@ function verify(msg, sig, pk) {
         throw new Error('Unable to verify provided signature with provided public key.');
     }
 }
+exports.verify = verify;
 /**
  * Returns true if the hash of the object minus the sign field matches the signed message in the sign field
  * @param obj
@@ -376,6 +391,7 @@ function verifyObj(obj) {
     const objHash = hashObj(obj, true);
     return verify(objHash, obj.sign.sig, obj.sign.owner);
 }
+exports.verifyObj = verifyObj;
 /**
  * This function initialized the cryptographic hashing functions
  * @param key The HASH_KEY for initializing the cryptographic hashing functions
@@ -394,6 +410,7 @@ function init(key) {
         throw new TypeError('Hash key must be a 32-byte string.');
     }
 }
+exports.init = init;
 /**
  * Ensures that the input data given is in the form of a buffer, or converted to one if not
  * @param input The input data to be checked for or converted to a buffer
@@ -417,6 +434,7 @@ function _ensureBuffer(input, name = 'Input') {
         }
     }
 }
+exports._ensureBuffer = _ensureBuffer;
 /**
  *
  * @param curveSk
@@ -429,6 +447,7 @@ function generateSharedKey(curveSk, curvePk) {
     sodium.crypto_scalarmult(keyBuf, curveSkBuf, curvePkBuf);
     return keyBuf;
 }
+exports.generateSharedKey = generateSharedKey;
 /**
  * Returns the auth key for the provided sharedKey
  * @param sharedKey
@@ -440,23 +459,5 @@ function _getAuthKey(sharedKey, nonce) {
     const resultBuf = xor(sharedKeyBuf, nonceBuf);
     return resultBuf;
 }
-exports = module.exports = init;
-exports.stringify = stringify;
-exports.randomBytes = randomBytes;
-exports.hash = hash;
-exports.hashObj = hashObj;
-exports.generateKeypair = generateKeypair;
-exports.convertSkToCurve = convertSkToCurve;
-exports.convertPkToCurve = convertPkToCurve;
-exports.encrypt = encrypt;
-exports.decrypt = decrypt;
-exports.tag = tag;
-exports.tagObj = tagObj;
-exports.authenticate = authenticate;
-exports.authenticateObj = authenticateObj;
-exports.sign = sign;
-exports.signObj = signObj;
-exports.verify = verify;
-exports.verifyObj = verifyObj;
-exports.generateSharedKey = generateSharedKey;
+exports._getAuthKey = _getAuthKey;
 //# sourceMappingURL=index.js.map
