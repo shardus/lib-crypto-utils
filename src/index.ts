@@ -2,33 +2,33 @@ const sodium = require('sodium-native')
 const stringify = require('fast-stable-stringify')
 const xor = require('buffer-xor')
 
-type hexstring = string
-type publicKey = hexstring
-type secretKey = hexstring
-type curvePublicKey = hexstring
-type curveSecretKey = hexstring
-type sharedKey = hexstring
+export type hexstring = string
+export type publicKey = hexstring
+export type secretKey = hexstring
+export type curvePublicKey = hexstring
+export type curveSecretKey = hexstring
+export type sharedKey = hexstring
 
 
-interface Keypair {
+export interface Keypair {
   publicKey: publicKey
   secretKey: secretKey
 }
 
-interface Signature {
+export interface Signature {
   owner: publicKey
   sig: hexstring
 }
 
-interface LooseObject {
+export interface LooseObject {
   [index: string]: any
 }
 
-interface TaggedObject extends LooseObject {
+export interface TaggedObject extends LooseObject {
   tag: hexstring
 }
 
-interface SignedObject extends LooseObject {
+export interface SignedObject extends LooseObject {
   sign: Signature
 }
 
