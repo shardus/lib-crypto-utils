@@ -1,25 +1,25 @@
 /// <reference types="node" />
-declare type hexstring = string;
-declare type publicKey = hexstring;
-declare type secretKey = hexstring;
-declare type curvePublicKey = hexstring;
-declare type curveSecretKey = hexstring;
-declare type sharedKey = hexstring;
-interface Keypair {
+export declare type hexstring = string;
+export declare type publicKey = hexstring;
+export declare type secretKey = hexstring;
+export declare type curvePublicKey = hexstring;
+export declare type curveSecretKey = hexstring;
+export declare type sharedKey = hexstring;
+export interface Keypair {
     publicKey: publicKey;
     secretKey: secretKey;
 }
-interface Signature {
+export interface Signature {
     owner: publicKey;
     sig: hexstring;
 }
-interface LooseObject {
+export interface LooseObject {
     [index: string]: any;
 }
-interface TaggedObject extends LooseObject {
+export interface TaggedObject extends LooseObject {
     tag: hexstring;
 }
-interface SignedObject extends LooseObject {
+export interface SignedObject extends LooseObject {
     sign: Signature;
 }
 /**
@@ -39,7 +39,7 @@ export declare function hash(input: string, fmt?: string): hexstring;
  * @param removeSign
  * @param removeTag
  */
-export declare function hashObj(obj: SignedObject, removeSign?: boolean, removeTag?: boolean): hexstring;
+export declare function hashObj(obj: any, removeSign?: boolean, removeTag?: boolean): hexstring;
 /**
  * Generates and retuns { publicKey, secretKey } as hex strings
  */
@@ -145,4 +145,3 @@ export declare function generateSharedKey(curveSk: curveSecretKey, curvePk: curv
  * @param nonce
  */
 export declare function _getAuthKey(sharedKey: sharedKey, nonce: string | Buffer): Buffer;
-export {};

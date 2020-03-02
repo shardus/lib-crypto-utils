@@ -1,6 +1,6 @@
 const sodium = require('sodium-native')
-const stringify = require('fast-stable-stringify')
 const xor = require('buffer-xor')
+export const stringify = require('fast-stable-stringify')
 
 export type hexstring = string
 export type publicKey = hexstring
