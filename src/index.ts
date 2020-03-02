@@ -90,7 +90,7 @@ export function hash (input: string, fmt = 'hex'): hexstring {
  * @param removeSign 
  * @param removeTag 
  */
-export function hashObj (obj: SignedObject, removeSign = false, removeTag = false): hexstring {
+export function hashObj (obj: any, removeSign = false, removeTag = false): hexstring {
   if (typeof obj !== 'object') {
     throw TypeError('Input must be an object.')
   }
