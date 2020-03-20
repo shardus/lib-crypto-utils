@@ -3,20 +3,20 @@ import xor = require('buffer-xor')
 import stringify = require('fast-stable-stringify')
 
 export type hexstring = string
-export type publicKey = hexstring
-export type secretKey = hexstring
-export type curvePublicKey = hexstring
-export type curveSecretKey = hexstring
-export type sharedKey = hexstring
+export type publicKey = hexstring | Buffer
+export type secretKey = hexstring | Buffer
+export type curvePublicKey = hexstring | Buffer
+export type curveSecretKey = hexstring | Buffer
+export type sharedKey = hexstring | Buffer
 
 
 export interface Keypair {
-  publicKey: publicKey
-  secretKey: secretKey
+  publicKey: hexstring
+  secretKey: hexstring
 }
 
 export interface Signature {
-  owner: publicKey
+  owner: hexstring
   sig: hexstring
 }
 
@@ -334,16 +334,11 @@ export function signObj (obj: SignedObject, sk: secretKey, pk: publicKey) {
   if (obj.length !== undefined) {
     throw new TypeError('Input cannot be an array.')
   }
-  if (typeof sk !== 'string') {
-    throw new TypeError('Secret key must be a string.')
-  }
-  if (typeof pk !== 'string') {
-    throw new TypeError('Public key must be a string.')
-  }
   const objStr = stringify(obj)
   const hashed = hash(objStr, 'buffer')
   const sig = sign(hashed, sk)
-  obj.sign = { owner: pk, sig }
+  const signPk = Buffer.isBuffer(pk) ? bufferToHex(pk) : pk
+  obj.sign = { owner: signPk, sig }
 }
 
 /**
@@ -356,29 +351,8 @@ export function verify (msg: string, sig: hexstring, pk: publicKey) {
   if (typeof msg !== 'string') {
     throw new TypeError('Message to compare must be a string.')
   }
-  let sigBuf
-  if (typeof sig !== 'string') {
-    if (Buffer.isBuffer(sig)) {
-      sigBuf = sig
-    } else {
-      throw new TypeError('Signature must be a hex string.')
-    }
-  } else {
-    try {
-      sigBuf = Buffer.from(sig, 'hex')
-    } catch (e) {
-      throw new TypeError('Signature must be a hex string.')
-    }
-  }
-  if (typeof pk !== 'string') {
-    throw new TypeError('Public key must be a hex string.')
-  }
-  let pkBuf
-  try {
-    pkBuf = Buffer.from(pk, 'hex')
-  } catch (e) {
-    throw new TypeError('Public key must be a hex string.')
-  }
+  const sigBuf = _ensureBuffer(sig)
+  const pkBuf = _ensureBuffer(pk)
   try {
     const opened = Buffer.allocUnsafe(sigBuf.length - sodium.crypto_sign_BYTES)
     sodium.crypto_sign_open(opened, sigBuf, pkBuf)
@@ -468,9 +442,13 @@ export function generateSharedKey (curveSk: curveSecretKey, curvePk: curvePublic
  * @param sharedKey 
  * @param nonce 
  */
-export function _getAuthKey (sharedKey: sharedKey, nonce: string | Buffer): Buffer {
+export function _getAuthKey (sharedKey: sharedKey | Buffer, nonce: string | Buffer): Buffer {
   const sharedKeyBuf = _ensureBuffer(sharedKey)
   const nonceBuf = _ensureBuffer(nonce)
   const resultBuf = xor(sharedKeyBuf, nonceBuf)
   return resultBuf
+}
+
+export function bufferToHex (buffer: Buffer) {
+  return [...new Uint8Array(buffer)].map(byte => byte.toString(16).padStart(2, '0')).join('')
 }
