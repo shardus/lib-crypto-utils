@@ -1,6 +1,6 @@
-const sodium = require('sodium-native')
-const xor = require('buffer-xor')
-export const stringify = require('fast-stable-stringify')
+import sodium = require('sodium-native')
+import xor = require('buffer-xor')
+import stringify = require('fast-stable-stringify')
 
 export type hexstring = string
 export type publicKey = hexstring
@@ -35,13 +35,13 @@ export interface SignedObject extends LooseObject {
 /**
  * The key used for initializing the cryptographic hashing algorithms
  */
-let HASH_KEY: hexstring | Buffer
+let HASH_KEY: Buffer
 
 /**
  * Returns 32-bytes random hex string, otherwise the number of bytes can be specified as an integer
  * @param bytes 
  */
-export function randomBytes (bytes: number = 32): hexstring {
+export function randomBytes (bytes = 32): hexstring {
   if (!Number.isInteger(bytes) || bytes <= 0) {
     throw new TypeError('Bytes must be given as integer greater than zero.')
   }
@@ -59,7 +59,7 @@ export function hash (input: string, fmt = 'hex'): hexstring {
   if (!HASH_KEY) {
     throw new Error('Hash key must be passed to module constructor.')
   }
-  let buf: Buffer | string
+  let buf: Buffer
   if (Buffer.isBuffer(input)) {
     buf = input
   } else {
