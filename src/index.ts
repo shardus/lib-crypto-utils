@@ -1,6 +1,8 @@
 import sodium = require('sodium-native')
 import xor = require('buffer-xor')
-import stringify = require('fast-stable-stringify')
+import fastStableStringify = require('fast-stable-stringify')
+
+export const stringify = fastStableStringify
 
 export type hexstring = string
 export type publicKey = hexstring
@@ -450,8 +452,4 @@ export function _getAuthKey (sharedKey: sharedKey | Buffer, nonce: string | Buff
 
 export function bufferToHex (buffer: Buffer) {
   return [...new Uint8Array(buffer)].map(byte => byte.toString(16).padStart(2, '0')).join('')
-}
-
-export function stringify(...things) {
-  return stringify(...things)
 }
