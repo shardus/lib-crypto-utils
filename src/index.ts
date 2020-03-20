@@ -3,20 +3,20 @@ import xor = require('buffer-xor')
 import stringify = require('fast-stable-stringify')
 
 export type hexstring = string
-export type publicKey = hexstring | Buffer
-export type secretKey = hexstring | Buffer
-export type curvePublicKey = hexstring | Buffer
-export type curveSecretKey = hexstring | Buffer
-export type sharedKey = hexstring | Buffer
+export type publicKey = hexstring
+export type secretKey = hexstring
+export type curvePublicKey = hexstring
+export type curveSecretKey = hexstring
+export type sharedKey = hexstring
 
 
 export interface Keypair {
-  publicKey: hexstring
-  secretKey: hexstring
+  publicKey: publicKey
+  secretKey: secretKey
 }
 
 export interface Signature {
-  owner: hexstring
+  owner: publicKey
   sig: hexstring
 }
 
@@ -139,7 +139,7 @@ export function generateKeypair (): Keypair {
  * Returns a curve sk represented as a hex string when given an sk
  * @param sk 
  */
-export function convertSkToCurve (sk: secretKey): curveSecretKey {
+export function convertSkToCurve (sk: secretKey | Buffer): curveSecretKey {
   const skBuf = _ensureBuffer(sk)
   const curveSkBuf = Buffer.allocUnsafe(sodium.crypto_box_SECRETKEYBYTES)
   try {
@@ -154,7 +154,7 @@ export function convertSkToCurve (sk: secretKey): curveSecretKey {
  * Returns a curve pk represented as a hex string when given a pk
  * @param pk 
  */
-export function convertPkToCurve (pk: publicKey): curvePublicKey {
+export function convertPkToCurve (pk: publicKey | Buffer): curvePublicKey {
   const pkBuf = _ensureBuffer(pk)
   const curvePkBuf = Buffer.allocUnsafe(sodium.crypto_box_PUBLICKEYBYTES)
   try {
@@ -171,7 +171,7 @@ export function convertPkToCurve (pk: publicKey): curvePublicKey {
  * @param curveSk 
  * @param curvePk 
  */
-export function encrypt (message: string, curveSk: curveSecretKey, curvePk: curvePublicKey) {
+export function encrypt (message: string, curveSk: curveSecretKey | Buffer, curvePk: curvePublicKey | Buffer) {
   const messageBuf = Buffer.from(message, 'utf8')
   const curveSkBuf = _ensureBuffer(curveSk, 'Secret key')
   const curvePkBuf = _ensureBuffer(curvePk, 'Public key')
@@ -189,7 +189,7 @@ export function encrypt (message: string, curveSk: curveSecretKey, curvePk: curv
  * @param curveSk 
  * @param curvePk 
  */
-export function decrypt (payload: any, curveSk: curveSecretKey, curvePk: curvePublicKey) {
+export function decrypt (payload: any, curveSk: curveSecretKey | Buffer, curvePk: curvePublicKey | Buffer) {
   payload = JSON.parse(payload)
   const ciphertext = _ensureBuffer(payload[0], 'Tag ciphertext')
   const nonce = _ensureBuffer(payload[1], 'Tag nonce')
@@ -205,7 +205,7 @@ export function decrypt (payload: any, curveSk: curveSecretKey, curvePk: curvePu
  * @param message 
  * @param sharedKey 
  */
-export function tag (message: string, sharedKey: sharedKey) {
+export function tag (message: string, sharedKey: sharedKey | Buffer) {
   const messageBuf = Buffer.from(message, 'utf8')
 
   const nonceBuf = Buffer.allocUnsafe(sodium.crypto_auth_BYTES)
@@ -225,7 +225,7 @@ export function tag (message: string, sharedKey: sharedKey) {
  * @param obj 
  * @param sharedKey 
  */
-export function tagObj (obj: TaggedObject, sharedKey: sharedKey) {
+export function tagObj (obj: TaggedObject, sharedKey: sharedKey | Buffer) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
@@ -246,7 +246,7 @@ export function tagObj (obj: TaggedObject, sharedKey: sharedKey) {
  * @param tag 
  * @param sharedKey 
  */
-export function authenticate (message: string, tag: string, sharedKey: sharedKey): boolean {
+export function authenticate (message: string, tag: string, sharedKey: sharedKey | Buffer): boolean {
   const nonce = tag.substring(sodium.crypto_auth_BYTES * 2)
   tag = tag.substring(0, sodium.crypto_auth_BYTES * 2)
   const tagBuf = _ensureBuffer(tag, 'Tag')
@@ -262,7 +262,7 @@ export function authenticate (message: string, tag: string, sharedKey: sharedKey
  * @param obj 
  * @param sharedKey 
  */
-export function authenticateObj (obj: TaggedObject, sharedKey: sharedKey) {
+export function authenticateObj (obj: TaggedObject, sharedKey: sharedKey | Buffer) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
@@ -281,7 +281,7 @@ export function authenticateObj (obj: TaggedObject, sharedKey: sharedKey) {
  * @param input 
  * @param sk 
  */
-export function sign (input: hexstring | Buffer, sk: secretKey) {
+export function sign (input: hexstring | Buffer, sk: secretKey | Buffer) {
   let inputBuf: Buffer
   let skBuf: Buffer
   if (typeof input !== 'string') {
@@ -326,7 +326,7 @@ export function sign (input: hexstring | Buffer, sk: secretKey) {
  * @param sk 
  * @param pk 
  */
-export function signObj (obj: SignedObject, sk: secretKey, pk: publicKey) {
+export function signObj (obj: SignedObject, sk: secretKey | Buffer, pk: publicKey | Buffer) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.')
   }
@@ -347,7 +347,7 @@ export function signObj (obj: SignedObject, sk: secretKey, pk: publicKey) {
  * @param sig 
  * @param pk 
  */
-export function verify (msg: string, sig: hexstring, pk: publicKey) {
+export function verify (msg: string, sig: hexstring | Buffer, pk: publicKey | Buffer) {
   if (typeof msg !== 'string') {
     throw new TypeError('Message to compare must be a string.')
   }
@@ -428,7 +428,7 @@ export function _ensureBuffer (input: string | Buffer, name = 'Input') {
  * @param curveSk 
  * @param curvePk 
  */
-export function generateSharedKey (curveSk: curveSecretKey, curvePk: curvePublicKey) {
+export function generateSharedKey (curveSk: curveSecretKey | Buffer, curvePk: curvePublicKey | Buffer) {
   const curveSkBuf = _ensureBuffer(curveSk)
   const curvePkBuf = _ensureBuffer(curvePk)
 
