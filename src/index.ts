@@ -9,7 +9,6 @@ export type curvePublicKey = hexstring
 export type curveSecretKey = hexstring
 export type sharedKey = hexstring
 
-
 export interface Keypair {
   publicKey: publicKey
   secretKey: secretKey
@@ -451,4 +450,8 @@ export function _getAuthKey (sharedKey: sharedKey | Buffer, nonce: string | Buff
 
 export function bufferToHex (buffer: Buffer) {
   return [...new Uint8Array(buffer)].map(byte => byte.toString(16).padStart(2, '0')).join('')
+}
+
+export function stringify(...things) {
+  return stringify(...things)
 }
