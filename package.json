@@ -32,9 +32,9 @@
   },
   "homepage": "https://gitlab.com/shardus/shardus-crypto-utils#readme",
   "dependencies": {
-    "buffer-xor": "2.0.2",
-    "fast-stable-stringify": "1.0.0",
-    "sodium-native": "2.2.2"
+    "buffer-xor": "^2.0.2",
+    "fast-stable-stringify": "^1.0.0",
+    "sodium-native": "^3.1.1"
   },
   "devDependencies": {
     "@types/buffer-xor": "^2.0.0",
