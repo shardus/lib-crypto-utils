@@ -11,6 +11,8 @@ export type curvePublicKey = hexstring
 export type curveSecretKey = hexstring
 export type sharedKey = hexstring
 
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+
 export interface Keypair {
   publicKey: publicKey
   secretKey: secretKey
@@ -271,7 +273,8 @@ export function authenticateObj (obj: TaggedObject, sharedKey: sharedKey | Buffe
     throw new Error('Object must contain a tag field')
   }
   const tag = obj.tag
-  delete obj.tag
+  let tagless: Optional<TaggedObject, 'tag'> = obj;
+  delete tagless.tag
   const objStr: string = stringify(obj)
   obj.tag = tag
   return authenticate(objStr, tag, sharedKey)
