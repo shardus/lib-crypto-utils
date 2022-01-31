@@ -6,7 +6,7 @@ Provides a simple interface to node-sodium cryptographic functions, as used by t
 const crypto = require('shardus-crypto-utils')
 
 // Module has a constructor that takes in a 32-byte hex key as required by node-sodium for generic hashing
-crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
+crypto.init('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
 
 // Uses json-stable-stringify to stringify an object in a consistent sorted manner; returns a string
 crypto.stringify(obj)
@@ -57,7 +57,7 @@ crypto.verifyObj(obj)
 
 ```JavaScript
 const crypto = require('shardus-crypto-utils')
-crypto('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
+crypto.init('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
 
 let msg = crypto.hash('Hello world!')
 console.log(msg)
