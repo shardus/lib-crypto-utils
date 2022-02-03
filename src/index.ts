@@ -2,7 +2,7 @@ import sodium = require('sodium-native')
 import xor = require('buffer-xor')
 import fastStableStringify = require('fast-stable-stringify')
 
-export const stringify = fastStableStringify
+export const stringify = fastStableStringify as (input: any) => string
 
 export type hexstring = string
 export type publicKey = hexstring
