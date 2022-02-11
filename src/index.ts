@@ -42,7 +42,7 @@ let HASH_KEY: Buffer
 
 /**
  * Returns 32-bytes random hex string, otherwise the number of bytes can be specified as an integer
- * @param bytes 
+ * @param bytes
  */
 export function randomBytes (bytes = 32): hexstring {
   if (!Number.isInteger(bytes) || bytes <= 0) {
@@ -55,8 +55,8 @@ export function randomBytes (bytes = 32): hexstring {
 
 /**
  * Returns the Blake2b hash of the input string or Buffer, default output type is hex
- * @param input 
- * @param fmt 
+ * @param input
+ * @param fmt
  */
 export function hash (input: string, fmt = 'hex'): hexstring {
   if (!HASH_KEY) {
@@ -89,11 +89,11 @@ export function hash (input: string, fmt = 'hex'): hexstring {
 
 /**
  * Returns the hash of the provided object as a hex string, takes an optional second parameter to hash an object with the "sign" field
- * @param obj 
- * @param removeSign 
- * @param removeTag 
+ * @param obj
+ * @param removeSign
+ * @param removeTag
  */
-export function hashObj (obj: any, removeSign = false, removeTag = false): hexstring {
+export function hashObj<T extends { sign?: string, tag?: string }>(obj: T, removeSign = false, removeTag = false): hexstring {
   if (typeof obj !== 'object') {
     throw TypeError('Input must be an object.')
   }
@@ -140,7 +140,7 @@ export function generateKeypair (): Keypair {
 
 /**
  * Returns a curve sk represented as a hex string when given an sk
- * @param sk 
+ * @param sk
  */
 export function convertSkToCurve (sk: secretKey | Buffer): curveSecretKey {
   const skBuf = _ensureBuffer(sk)
@@ -155,7 +155,7 @@ export function convertSkToCurve (sk: secretKey | Buffer): curveSecretKey {
 
 /**
  * Returns a curve pk represented as a hex string when given a pk
- * @param pk 
+ * @param pk
  */
 export function convertPkToCurve (pk: publicKey | Buffer): curvePublicKey {
   const pkBuf = _ensureBuffer(pk)
@@ -170,9 +170,9 @@ export function convertPkToCurve (pk: publicKey | Buffer): curvePublicKey {
 
 /**
  * Returns a payload obtained by encrypting and tagging the message string with a key produced from the given sk and pk
- * @param message 
- * @param curveSk 
- * @param curvePk 
+ * @param message
+ * @param curveSk
+ * @param curvePk
  */
 export function encrypt (message: string, curveSk: curveSecretKey | Buffer, curvePk: curvePublicKey | Buffer) {
   const messageBuf = Buffer.from(message, 'utf8')
@@ -188,9 +188,9 @@ export function encrypt (message: string, curveSk: curveSecretKey | Buffer, curv
 
 /**
  * Returns the message string obtained by decrypting the payload with the given sk and pk and authenticating the attached tag
- * @param payload 
- * @param curveSk 
- * @param curvePk 
+ * @param payload
+ * @param curveSk
+ * @param curvePk
  */
 export function decrypt (payload: any, curveSk: curveSecretKey | Buffer, curvePk: curvePublicKey | Buffer) {
   payload = JSON.parse(payload)
@@ -205,8 +205,8 @@ export function decrypt (payload: any, curveSk: curveSecretKey | Buffer, curvePk
 
 /**
  * Returns an authentication tag obtained by encrypting the hash of the message string with a key produced from the given sk and pk
- * @param message 
- * @param sharedKey 
+ * @param message
+ * @param sharedKey
  */
 export function tag (message: string, sharedKey: sharedKey | Buffer) {
   const messageBuf = Buffer.from(message, 'utf8')
@@ -225,8 +225,8 @@ export function tag (message: string, sharedKey: sharedKey | Buffer) {
 
 /**
  * Attaches a tag field to the input object, containg an authentication tag for the obj
- * @param obj 
- * @param sharedKey 
+ * @param obj
+ * @param sharedKey
  */
 export function tagObj (obj: TaggedObject, sharedKey: sharedKey | Buffer) {
   if (typeof obj !== 'object') {
@@ -245,9 +245,9 @@ export function tagObj (obj: TaggedObject, sharedKey: sharedKey | Buffer) {
 
 /**
  * Returns true if tag is a valid authentication tag for message string
- * @param message 
- * @param tag 
- * @param sharedKey 
+ * @param message
+ * @param tag
+ * @param sharedKey
  */
 export function authenticate (message: string, tag: string, sharedKey: sharedKey | Buffer): boolean {
   const nonce = tag.substring(sodium.crypto_auth_BYTES * 2)
@@ -262,8 +262,8 @@ export function authenticate (message: string, tag: string, sharedKey: sharedKey
 
 /**
  * Returns true if the authentication tag is a valid tag for the object minus the tag field
- * @param obj 
- * @param sharedKey 
+ * @param obj
+ * @param sharedKey
  */
 export function authenticateObj (obj: TaggedObject, sharedKey: sharedKey | Buffer) {
   if (typeof obj !== 'object') {
@@ -282,8 +282,8 @@ export function authenticateObj (obj: TaggedObject, sharedKey: sharedKey | Buffe
 
 /**
  * Returns a signature obtained by signing the input hash (hex string or buffer) with the sk string
- * @param input 
- * @param sk 
+ * @param input
+ * @param sk
  */
 export function sign (input: hexstring | Buffer, sk: secretKey | Buffer) {
   let inputBuf: Buffer
@@ -324,11 +324,11 @@ export function sign (input: hexstring | Buffer, sk: secretKey | Buffer) {
 }
 
 /**
- * Attaches a sign field to the input object, containing a signed version of the hash of the object, 
+ * Attaches a sign field to the input object, containing a signed version of the hash of the object,
  * along with the public key of the signer
- * @param obj 
- * @param sk 
- * @param pk 
+ * @param obj
+ * @param sk
+ * @param pk
  */
 export function signObj (obj: SignedObject, sk: secretKey | Buffer, pk: publicKey | Buffer) {
   if (typeof obj !== 'object') {
@@ -347,9 +347,9 @@ export function signObj (obj: SignedObject, sk: secretKey | Buffer, pk: publicKe
 
 /**
  * Returns true if the hash of the input was signed by the owner of the pk
- * @param msg 
- * @param sig 
- * @param pk 
+ * @param msg
+ * @param sig
+ * @param pk
  */
 export function verify (msg: string, sig: hexstring | Buffer, pk: publicKey | Buffer) {
   if (typeof msg !== 'string') {
@@ -369,7 +369,7 @@ export function verify (msg: string, sig: hexstring | Buffer, pk: publicKey | Bu
 
 /**
  * Returns true if the hash of the object minus the sign field matches the signed message in the sign field
- * @param obj 
+ * @param obj
  */
 export function verifyObj (obj: SignedObject) {
   if (typeof obj !== 'object') {
@@ -428,9 +428,9 @@ export function _ensureBuffer (input: string | Buffer, name = 'Input') {
 }
 
 /**
- * 
- * @param curveSk 
- * @param curvePk 
+ *
+ * @param curveSk
+ * @param curvePk
  */
 export function generateSharedKey (curveSk: curveSecretKey | Buffer, curvePk: curvePublicKey | Buffer) {
   const curveSkBuf = _ensureBuffer(curveSk)
@@ -443,8 +443,8 @@ export function generateSharedKey (curveSk: curveSecretKey | Buffer, curvePk: cu
 
 /**
  * Returns the auth key for the provided sharedKey
- * @param sharedKey 
- * @param nonce 
+ * @param sharedKey
+ * @param nonce
  */
 export function _getAuthKey (sharedKey: sharedKey | Buffer, nonce: string | Buffer): Buffer {
   const sharedKeyBuf = _ensureBuffer(sharedKey)
