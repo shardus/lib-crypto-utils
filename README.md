@@ -11,7 +11,7 @@ crypto.init('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
 // Uses json-stable-stringify to stringify an object in a consistent sorted manner; returns a string
 crypto.stringify(obj)
 
-/* 
+/*
   Returns a 32-byte random hex string by default, otherwise you can
   specify how many bytes you would like to generate
 */
@@ -42,7 +42,7 @@ crypto.signObj(obj, sk, pk)
 // Returns true if the input was signed by the owner of the pk
 crypto.verify(input, sig, pk)
 
-/* 
+/*
   Returns true if the hash of the object minus the sign field matches
   the signed message in the sign field
 */
@@ -61,4 +61,12 @@ crypto.init('64f152869ca2d473e4ba64ab53f49ccdb2edae22da192c126850970e788af347')
 
 let msg = crypto.hash('Hello world!')
 console.log(msg)
+```
+
+## Release
+
+For your releasing pleasure, oh shardus Maintainer, please run the command
+
+```sh
+npm run release
 ```

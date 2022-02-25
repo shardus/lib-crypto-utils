@@ -1,5 +1,5 @@
 {
-  "name": "shardus-crypto-utils",
+  "name": "@shardus/crypto-utils",
   "version": "4.0.0",
   "description": "Provides simple crypto functions, as used by the ULC Project.",
   "main": "./build/src/index.js",
@@ -9,6 +9,7 @@
     "src/**/*"
   ],
   "scripts": {
+    "release": "np --no-tests --no-yarn",
     "test": "echo \"Error: no test specified\" && exit 1",
     "check": "gts check",
     "clean": "gts clean",
@@ -21,6 +22,9 @@
   "repository": {
     "type": "git",
     "url": "https://gitlab.com/shardus/shardus-crypto-utils"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "contributors": [
     "Aamir Syed",
