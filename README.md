@@ -51,7 +51,7 @@ crypto.verifyObj(obj)
 
 ## Install
 
-`npm install gitlab:Shardus/shardus-crypto-utils`
+`npm install @shardus/crypto-utils`
 
 ## Use
 
