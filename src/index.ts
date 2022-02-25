@@ -95,7 +95,7 @@ export function hash (input: string, fmt = 'hex'): hexstring {
  */
 // Note about the partial - objects with only optional properties are not matching structurally downstream. This is an attempt
 // to fix that.
-export function hashObj(obj: Object & { sign?: Signature, tag?: string }, removeSign = false, removeTag = false): hexstring {
+export function hashObj(obj: {[key: string]: any}, removeSign = false, removeTag = false): hexstring {
   if (typeof obj !== 'object') {
     throw TypeError('Input must be an object.')
   }
