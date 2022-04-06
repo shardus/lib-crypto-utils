@@ -1,0 +1,14 @@
+image: node:16.11.1 #The enviornment which we need
+
+stages:       #Different stages which our pipeline need
+    - lint
+
+before_script:
+    - npm install
+
+lint:      #Name of the job
+ stage: lint  #Tells job which stage it is
+ script:          #Scripts which need to be ran by the server
+  - npm run lint
+  - npm run check
+  - npm run compile
