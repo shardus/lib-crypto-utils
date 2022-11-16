@@ -140,6 +140,7 @@ export function hashObj(
  */
 export function generateKeypair(): Keypair {
   const publicKey = Buffer.allocUnsafe(sodium.crypto_sign_PUBLICKEYBYTES);
+  // ? change to safe buffer
   const secretKey = Buffer.allocUnsafe(sodium.crypto_sign_SECRETKEYBYTES);
   sodium.crypto_sign_keypair(publicKey, secretKey);
   return {
@@ -154,12 +155,14 @@ export function generateKeypair(): Keypair {
  */
 export function convertSkToCurve(sk: secretKey | Buffer): curveSecretKey {
   const skBuf = _ensureBuffer(sk);
+  // ? change to safe buffer
   const curveSkBuf = Buffer.allocUnsafe(sodium.crypto_box_SECRETKEYBYTES);
   try {
     sodium.crypto_sign_ed25519_sk_to_curve25519(curveSkBuf, skBuf);
   } catch (e) {
     throw new Error('Could not convert given secret key to curve secret key.');
   }
+  // ? make this return a buffer by default, add hex string param
   return curveSkBuf.toString('hex');
 }
 
@@ -323,6 +326,7 @@ export function authenticateObj(
 export function sign(input: hexstring | Buffer, sk: secretKey | Buffer) {
   let inputBuf: Buffer;
   let skBuf: Buffer;
+  // ? repeated code use _ensureBuffer
   if (typeof input !== 'string') {
     if (Buffer.isBuffer(input)) {
       inputBuf = input;
@@ -336,6 +340,7 @@ export function sign(input: hexstring | Buffer, sk: secretKey | Buffer) {
       throw new TypeError('Input string must be in hex format.');
     }
   }
+  // ? repeated code use _ensureBuffer
   if (typeof sk !== 'string') {
     if (Buffer.isBuffer(sk)) {
       skBuf = sk;
@@ -471,6 +476,7 @@ export function _ensureBuffer(input: string | Buffer, name = 'Input') {
     }
   } else {
     try {
+      // ? looking at the nodejs code, this uses a shared unsafe buffer but if the entry point accepts only buffers for secrets this should be fine
       return Buffer.from(input, 'hex');
     } catch (e) {
       throw new TypeError(`${name} string must be in hex format.`);
@@ -490,6 +496,7 @@ export function generateSharedKey(
   const curveSkBuf = _ensureBuffer(curveSk);
   const curvePkBuf = _ensureBuffer(curvePk);
 
+  // ? change this to safe buffer
   const keyBuf = Buffer.allocUnsafe(sodium.crypto_scalarmult_BYTES);
   sodium.crypto_scalarmult(keyBuf, curveSkBuf, curvePkBuf);
   return keyBuf;
