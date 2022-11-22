@@ -468,8 +468,7 @@ export function generateSharedKey(
   const curveSkBuf = _ensureBuffer(curveSk);
   const curvePkBuf = _ensureBuffer(curvePk);
 
-  // ? change this to safe buffer
-  const keyBuf = Buffer.allocUnsafe(sodium.crypto_scalarmult_BYTES);
+  const keyBuf = Buffer.alloc(sodium.crypto_scalarmult_BYTES);
   sodium.crypto_scalarmult(keyBuf, curveSkBuf, curvePkBuf);
   return keyBuf;
 }
