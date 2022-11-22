@@ -7,8 +7,11 @@ export const stringify = fastStableStringify as (input: any) => string;
 export type hexstring = string;
 export type publicKey = hexstring;
 export type secretKey = hexstring;
+export type publicKeyBuf = Buffer;
+export type secretKeyBuf = Buffer;
 export type curvePublicKey = hexstring;
 export type curveSecretKey = hexstring;
+export type curveSecretKeyBuf = Buffer;
 export type sharedKey = hexstring;
 
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
@@ -16,6 +19,11 @@ type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 export interface Keypair {
   publicKey: publicKey;
   secretKey: secretKey;
+}
+
+export interface KeypairBuf {
+  publicKey: publicKeyBuf;
+  secretKey: secretKeyBuf;
 }
 
 export interface Signature {
@@ -139,13 +147,20 @@ export function hashObj(
  * Generates and retuns { publicKey, secretKey } as hex strings
  */
 export function generateKeypair(): Keypair {
+  const keypairBuf = generateKeypairBuf();
+  return {
+    publicKey: keypairBuf.publicKey.toString('hex'),
+    secretKey: keypairBuf.secretKey.toString('hex'),
+  };
+}
+
+export function generateKeypairBuf(): KeypairBuf {
   const publicKey = Buffer.allocUnsafe(sodium.crypto_sign_PUBLICKEYBYTES);
-  // ? change to safe buffer
-  const secretKey = Buffer.allocUnsafe(sodium.crypto_sign_SECRETKEYBYTES);
+  const secretKey = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES);
   sodium.crypto_sign_keypair(publicKey, secretKey);
   return {
-    publicKey: publicKey.toString('hex'),
-    secretKey: secretKey.toString('hex'),
+    publicKey: publicKey,
+    secretKey: secretKey,
   };
 }
 
@@ -154,16 +169,19 @@ export function generateKeypair(): Keypair {
  * @param sk
  */
 export function convertSkToCurve(sk: secretKey | Buffer): curveSecretKey {
+  const curveSkBuf = convertSkToCurveBuf(sk);
+  return curveSkBuf.toString('hex');
+}
+
+export function convertSkToCurveBuf(sk: secretKey | Buffer): curveSecretKeyBuf {
   const skBuf = _ensureBuffer(sk);
-  // ? change to safe buffer
-  const curveSkBuf = Buffer.allocUnsafe(sodium.crypto_box_SECRETKEYBYTES);
+  const curveSkBuf = Buffer.alloc(sodium.crypto_box_SECRETKEYBYTES);
   try {
     sodium.crypto_sign_ed25519_sk_to_curve25519(curveSkBuf, skBuf);
   } catch (e) {
     throw new Error('Could not convert given secret key to curve secret key.');
   }
-  // ? make this return a buffer by default, add hex string param
-  return curveSkBuf.toString('hex');
+  return curveSkBuf;
 }
 
 /**
@@ -324,36 +342,8 @@ export function authenticateObj(
  * @param sk
  */
 export function sign(input: hexstring | Buffer, sk: secretKey | Buffer) {
-  let inputBuf: Buffer;
-  let skBuf: Buffer;
-  // ? repeated code use _ensureBuffer
-  if (typeof input !== 'string') {
-    if (Buffer.isBuffer(input)) {
-      inputBuf = input;
-    } else {
-      throw new TypeError('Input must be a hex string or buffer.');
-    }
-  } else {
-    try {
-      inputBuf = Buffer.from(input, 'hex');
-    } catch (e) {
-      throw new TypeError('Input string must be in hex format.');
-    }
-  }
-  // ? repeated code use _ensureBuffer
-  if (typeof sk !== 'string') {
-    if (Buffer.isBuffer(sk)) {
-      skBuf = sk;
-    } else {
-      throw new TypeError('Secret key must be a hex string or buffer.');
-    }
-  } else {
-    try {
-      skBuf = Buffer.from(sk, 'hex');
-    } catch (e) {
-      throw new TypeError('Secret key string must be in hex format');
-    }
-  }
+  let inputBuf = _ensureBuffer(input);
+  let skBuf = _ensureBuffer(sk, 'Secret key');
   const sig = Buffer.allocUnsafe(inputBuf.length + sodium.crypto_sign_BYTES);
   try {
     sodium.crypto_sign(sig, inputBuf, skBuf);
