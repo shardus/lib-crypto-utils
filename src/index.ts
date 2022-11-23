@@ -139,13 +139,16 @@ export function hashObj(
 /**
  * Generates and returns { publicKey, secretKey } as hex strings
  */
-export function generateKeypair(encodeSecretToHex: boolean = false): Keypair {
+export function generateKeypair(opts?: {
+  encodeSecretToHex?: boolean;
+}): Keypair {
   const publicKey = Buffer.allocUnsafe(sodium.crypto_sign_PUBLICKEYBYTES);
   const secretKey = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES);
   sodium.crypto_sign_keypair(publicKey, secretKey);
+  const shouldEncodeSecretToHex = opts?.encodeSecretToHex || false;
   return {
     publicKey: publicKey.toString('hex'),
-    secretKey: encodeSecretToHex ? secretKey.toString('hex') : secretKey,
+    secretKey: shouldEncodeSecretToHex ? secretKey.toString('hex') : secretKey,
   };
 }
 
