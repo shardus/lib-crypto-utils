@@ -158,7 +158,7 @@ export function generateKeypair(opts?: {
  */
 export function convertSkToCurve(
   sk: secretKey | Buffer,
-  encodeToHex: boolean = false
+  opts?: { encodeToHex?: boolean }
 ): curveSecretKey {
   const skBuf = _ensureBuffer(sk);
   const curveSkBuf = Buffer.alloc(sodium.crypto_box_SECRETKEYBYTES);
@@ -167,7 +167,8 @@ export function convertSkToCurve(
   } catch (e) {
     throw new Error('Could not convert given secret key to curve secret key.');
   }
-  return encodeToHex ? curveSkBuf.toString('hex') : curveSkBuf;
+  const shouldEncodeToHex = opts?.encodeToHex || false;
+  return shouldEncodeToHex ? curveSkBuf.toString('hex') : curveSkBuf;
 }
 
 /**
