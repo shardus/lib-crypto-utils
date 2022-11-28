@@ -139,14 +139,14 @@ export function hashObj(
  * Generates and returns { publicKey, secretKey } as hex strings (optionally as buffer)
  * @param opts
  */
-export function generateKeypair(opts?: { getAsBuffer?: boolean }): Keypair {
+export function generateKeypair(opts?: { getSecretAsBuffer?: boolean }): Keypair {
   const publicKey = Buffer.allocUnsafe(sodium.crypto_sign_PUBLICKEYBYTES);
   const secretKey = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES);
   sodium.crypto_sign_keypair(publicKey, secretKey);
-  const shouldGetAsBuffer = opts?.getAsBuffer || false;
+  const shouldGetSecretAsBuffer = opts?.getSecretAsBuffer || false;
   return {
     publicKey: publicKey.toString('hex'),
-    secretKey: shouldGetAsBuffer ? secretKey : secretKey.toString('hex'),
+    secretKey: shouldGetSecretAsBuffer ? secretKey : secretKey.toString('hex'),
   };
 }
 
