@@ -7,7 +7,6 @@ export const stringify = fastStableStringify as (input: any) => string;
 export type hexstring = string;
 export type publicKey = hexstring;
 export type secretKey = hexstring | Buffer;
-export type secretKeyBuf = Buffer;
 export type curvePublicKey = hexstring;
 export type curveSecretKey = hexstring | Buffer;
 export type sharedKey = hexstring;
@@ -137,28 +136,28 @@ export function hashObj(
 }
 
 /**
- * Generates and returns { publicKey, secretKey } as hex strings
+ * Generates and returns { publicKey, secretKey } as hex strings (optionally as buffer)
+ * @param opts
  */
-export function generateKeypair(opts?: {
-  encodeSecretToHex?: boolean;
-}): Keypair {
+export function generateKeypair(opts?: { getAsBuffer?: boolean }): Keypair {
   const publicKey = Buffer.allocUnsafe(sodium.crypto_sign_PUBLICKEYBYTES);
   const secretKey = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES);
   sodium.crypto_sign_keypair(publicKey, secretKey);
-  const shouldEncodeSecretToHex = opts?.encodeSecretToHex || false;
+  const shouldGetAsBuffer = opts?.getAsBuffer || false;
   return {
     publicKey: publicKey.toString('hex'),
-    secretKey: shouldEncodeSecretToHex ? secretKey.toString('hex') : secretKey,
+    secretKey: shouldGetAsBuffer ? secretKey : secretKey.toString('hex'),
   };
 }
 
 /**
- * Returns a curve sk represented as a hex string when given an sk
+ * Returns a curve sk represented as a hex string (optionally as buffer) when given an sk
  * @param sk
+ * @param opts
  */
 export function convertSkToCurve(
   sk: secretKey | Buffer,
-  opts?: { encodeToHex?: boolean }
+  opts?: { getAsBuffer?: boolean }
 ): curveSecretKey {
   const skBuf = _ensureBuffer(sk);
   const curveSkBuf = Buffer.alloc(sodium.crypto_box_SECRETKEYBYTES);
@@ -167,8 +166,8 @@ export function convertSkToCurve(
   } catch (e) {
     throw new Error('Could not convert given secret key to curve secret key.');
   }
-  const shouldEncodeToHex = opts?.encodeToHex || false;
-  return shouldEncodeToHex ? curveSkBuf.toString('hex') : curveSkBuf;
+  const shouldGetAsBuffer = opts?.getAsBuffer || false;
+  return shouldGetAsBuffer ? curveSkBuf : curveSkBuf.toString('hex');
 }
 
 /**
