@@ -45,7 +45,7 @@
     "@types/buffer-xor": "2.0.0",
     "@types/node": "16.11.24",
     "gts": "3.1.1",
-    "np": "7.7.0",
+    "np": "8.0.4",
     "typescript": "4.5.5"
   }
 }
