@@ -65,3 +65,6 @@ typings/
 # Sublime project files
 *.sublime-workspace
 *.sublime-project
+
+# direnv
+.direnv/
