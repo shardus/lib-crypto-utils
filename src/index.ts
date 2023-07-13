@@ -1,15 +1,17 @@
+import {
+  curvePublicKey,
+  curveSecretKey,
+  hexstring,
+  publicKey,
+  secretKey,
+  sharedKey,
+} from '@shardus/types';
+
 const sodium = require('sodium-native');
 const xor = require('buffer-xor');
 const fastStableStringify = require('fast-stable-stringify');
 
 export const stringify = fastStableStringify as (input: any) => string;
-
-export type hexstring = string;
-export type publicKey = hexstring;
-export type secretKey = hexstring;
-export type curvePublicKey = hexstring;
-export type curveSecretKey = hexstring;
-export type sharedKey = hexstring;
 
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
