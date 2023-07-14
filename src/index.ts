@@ -1,11 +1,9 @@
-import {
-  curvePublicKey,
-  curveSecretKey,
-  hexstring,
-  publicKey,
-  secretKey,
-  sharedKey,
-} from '@shardus/types';
+export type hexstring = string;
+export type publicKey = hexstring;
+export type secretKey = hexstring;
+export type curvePublicKey = hexstring;
+export type curveSecretKey = hexstring;
+export type sharedKey = hexstring;
 
 const sodium = require('sodium-native');
 const xor = require('buffer-xor');
