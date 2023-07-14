@@ -40,7 +40,7 @@
     "buffer-xor": "2.0.2",
     "fast-stable-stringify": "1.0.0",
     "sodium-native": "3.3.0",
-    "@shardus/types": "1.1.0"
+    "@shardus/types": "1.2.0"
   },
   "devDependencies": {
     "@types/buffer-xor": "2.0.0",
