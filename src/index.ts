@@ -9,7 +9,7 @@ const sodium = require('sodium-native');
 const xor = require('buffer-xor');
 const fastStableStringify = require('fast-stable-stringify');
 
-export const stringify = fastStableStringify as (input: any) => string;
+export let stringify = fastStableStringify as (input: any) => string;
 
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
@@ -313,6 +313,14 @@ export function authenticateObj(
   const objStr: string = stringify(obj);
   obj.tag = tag;
   return authenticate(objStr, tag, sharedKey);
+}
+
+/**
+ * Sets a custom stringifier method
+ * @param method
+ */
+export function setCustomStringifier(method: (input: any) => string) {
+  stringify = method;
 }
 
 /**
