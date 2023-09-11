@@ -10,6 +10,7 @@ const xor = require('buffer-xor');
 const fastStableStringify = require('fast-stable-stringify');
 
 export let stringify = fastStableStringify as (input: any) => string;
+export let stringifierName = 'fast-stable-stringify'
 
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
@@ -39,6 +40,11 @@ export interface SignedObject extends LooseObject {
  * The key used for initializing the cryptographic hashing algorithms
  */
 let HASH_KEY: Buffer;
+
+export function setCustomStringifier(customStringifier: (input: any) => string, name: string) {
+  stringify = customStringifier
+  stringifierName = name
+}
 
 /**
  * Returns 32-bytes random hex string, otherwise the number of bytes can be specified as an integer
