@@ -9,8 +9,8 @@ const sodium = require('sodium-native');
 const xor = require('buffer-xor');
 const fastStableStringify = require('fast-stable-stringify');
 
-export let stringify = fastStableStringify as (input: any) => string;
-export let stringifierName = 'fast-stable-stringify'
+export let stringify = fastStableStringify as (input: unknown) => string;
+export let stringifierName = 'fast-stable-stringify';
 
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
@@ -25,7 +25,7 @@ export interface Signature {
 }
 
 export interface LooseObject {
-  [index: string]: any;
+  [index: string]: unknown;
 }
 
 export interface TaggedObject extends LooseObject {
@@ -74,7 +74,7 @@ export function hash(input: string, fmt = 'hex'): hexstring {
   }
   const digest = Buffer.allocUnsafe(32);
   sodium.crypto_generichash(digest, buf, HASH_KEY);
-  let output: any;
+  let output;
   switch (fmt) {
     case 'buffer':
       output = digest;
@@ -97,7 +97,7 @@ export function hash(input: string, fmt = 'hex'): hexstring {
 // Note about the partial - objects with only optional properties are not matching structurally downstream. This is an attempt
 // to fix that.
 export function hashObj(
-  obj: { [key: string]: any },
+  obj: { [key: string]: unknown },
   removeSign = false,
   removeTag = false
 ): hexstring {
@@ -210,7 +210,7 @@ export function encrypt(
  * @param curvePk
  */
 export function decrypt(
-  payload: any,
+  payload: string,
   curveSk: curveSecretKey | Buffer,
   curvePk: curvePublicKey | Buffer
 ) {
@@ -325,7 +325,7 @@ export function setCustomStringifier(
   name: string
 ) {
   stringify = method;
-  stringifierName = name
+  stringifierName = name;
 }
 
 /**
