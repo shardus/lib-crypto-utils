@@ -41,11 +41,6 @@ export interface SignedObject extends LooseObject {
  */
 let HASH_KEY: Buffer;
 
-export function setCustomStringifier(customStringifier: (input: any) => string, name: string) {
-  stringify = customStringifier
-  stringifierName = name
-}
-
 /**
  * Returns 32-bytes random hex string, otherwise the number of bytes can be specified as an integer
  * @param bytes
@@ -325,8 +320,12 @@ export function authenticateObj(
  * Sets a custom stringifier method
  * @param method
  */
-export function setCustomStringifier(method: (input: any) => string) {
+export function setCustomStringifier(
+  method: (input: unknown) => string,
+  name: string
+) {
   stringify = method;
+  stringifierName = name
 }
 
 /**
