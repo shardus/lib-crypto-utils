@@ -25,7 +25,8 @@ export interface Signature {
 }
 
 export interface LooseObject {
-  [index: string]: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [index: string]: any;
 }
 
 export interface TaggedObject extends LooseObject {
@@ -97,7 +98,8 @@ export function hash(input: string, fmt = 'hex'): hexstring {
 // Note about the partial - objects with only optional properties are not matching structurally downstream. This is an attempt
 // to fix that.
 export function hashObj(
-  obj: { [key: string]: unknown },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: { [key: string]: any },
   removeSign = false,
   removeTag = false
 ): hexstring {
