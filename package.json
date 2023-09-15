@@ -9,7 +9,7 @@
     "src/**/*"
   ],
   "scripts": {
-    "release": "np --no-tests --no-yarn",
+    "release": "np --no-tests --no-yarn --any-branch",
     "test": "echo \"Error: no test specified\" && exit 1",
     "check": "gts check",
     "lint": "gts lint",
