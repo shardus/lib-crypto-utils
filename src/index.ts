@@ -5,9 +5,9 @@ export type curvePublicKey = hexstring;
 export type curveSecretKey = hexstring;
 export type sharedKey = hexstring;
 
-import sodium from 'sodium-native';
-import xor from 'buffer-xor';
-import fastStableStringify from 'fast-stable-stringify';
+const sodium = require('sodium-native');
+const xor = require('buffer-xor');
+const fastStableStringify = require('fast-stable-stringify');
 
 export let stringify = fastStableStringify as (input: unknown) => string;
 export let stringifierName = 'fast-stable-stringify';
@@ -106,7 +106,7 @@ export function hashObj(
   if (typeof obj !== 'object') {
     throw TypeError('Input must be an object.');
   }
-  function performHash(obj): string {
+  function performHash(obj) {
     const input: string = stringify(obj);
     const hashed = hash(input);
     return hashed;
@@ -159,7 +159,7 @@ export function convertSkToCurve(sk: secretKey | Buffer): curveSecretKey {
   const skBuf = _ensureBuffer(sk);
   const curveSkBuf = Buffer.allocUnsafe(sodium.crypto_box_SECRETKEYBYTES);
   try {
-    sodium.crypto_sign_ed25519_sk_to_curve25519(curveSkBuf, skBuf as Buffer);
+    sodium.crypto_sign_ed25519_sk_to_curve25519(curveSkBuf, skBuf);
   } catch (e) {
     throw new Error('Could not convert given secret key to curve secret key.');
   }
@@ -174,7 +174,7 @@ export function convertPkToCurve(pk: publicKey | Buffer): curvePublicKey {
   const pkBuf = _ensureBuffer(pk);
   const curvePkBuf = Buffer.allocUnsafe(sodium.crypto_box_PUBLICKEYBYTES);
   try {
-    sodium.crypto_sign_ed25519_pk_to_curve25519(curvePkBuf, pkBuf as Buffer);
+    sodium.crypto_sign_ed25519_pk_to_curve25519(curvePkBuf, pkBuf);
   } catch (e) {
     throw new Error('Could not convert given public key to curve public key.');
   }
@@ -191,7 +191,7 @@ export function encrypt(
   message: string,
   curveSk: curveSecretKey | Buffer,
   curvePk: curvePublicKey | Buffer
-): string {
+) {
   const messageBuf = Buffer.from(message, 'utf8');
   const curveSkBuf = _ensureBuffer(curveSk, 'Secret key');
   const curvePkBuf = _ensureBuffer(curvePk, 'Public key');
@@ -200,7 +200,7 @@ export function encrypt(
   );
   const nonce = Buffer.allocUnsafe(sodium.crypto_box_NONCEBYTES);
   sodium.randombytes_buf(nonce);
-  sodium.crypto_box_easy(ciphertext, messageBuf, nonce, curvePkBuf as Buffer, curveSkBuf as Buffer);
+  sodium.crypto_box_easy(ciphertext, messageBuf, nonce, curvePkBuf, curveSkBuf);
   const payload = [ciphertext.toString('hex'), nonce.toString('hex')];
   return JSON.stringify(payload);
 }
@@ -215,7 +215,7 @@ export function decrypt(
   payload: string,
   curveSk: curveSecretKey | Buffer,
   curvePk: curvePublicKey | Buffer
-): { isValid: boolean; message: string } {
+) {
   payload = JSON.parse(payload);
   const ciphertext = _ensureBuffer(payload[0], 'Tag ciphertext');
   const nonce = _ensureBuffer(payload[1], 'Tag nonce');
@@ -226,10 +226,10 @@ export function decrypt(
   );
   const isValid = sodium.crypto_box_open_easy(
     message,
-    ciphertext as Buffer,
-    nonce as Buffer,
-    publicKey as Buffer,
-    secretKey as Buffer
+    ciphertext,
+    nonce,
+    publicKey,
+    secretKey
   );
   return { isValid, message: message.toString('utf8') };
 }
@@ -239,7 +239,7 @@ export function decrypt(
  * @param message
  * @param sharedKey
  */
-export function tag(message: string, sharedKey: sharedKey | Buffer): string {
+export function tag(message: string, sharedKey: sharedKey | Buffer) {
   const messageBuf = Buffer.from(message, 'utf8');
 
   const nonceBuf = Buffer.allocUnsafe(sodium.crypto_auth_BYTES);
@@ -259,7 +259,7 @@ export function tag(message: string, sharedKey: sharedKey | Buffer): string {
  * @param obj
  * @param sharedKey
  */
-export function tagObj(obj: TaggedObject, sharedKey: sharedKey | Buffer): void {
+export function tagObj(obj: TaggedObject, sharedKey: sharedKey | Buffer) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.');
   }
@@ -292,7 +292,7 @@ export function authenticate(
   const keyBuf: Buffer = _getAuthKey(sharedKey, nonce);
 
   const messageBuf = Buffer.from(message, 'utf8');
-  return sodium.crypto_auth_verify(tagBuf as Buffer, messageBuf, keyBuf);
+  return sodium.crypto_auth_verify(tagBuf, messageBuf, keyBuf);
 }
 
 /**
@@ -303,7 +303,7 @@ export function authenticate(
 export function authenticateObj(
   obj: TaggedObject,
   sharedKey: sharedKey | Buffer
-): boolean {
+) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.');
   }
@@ -325,7 +325,7 @@ export function authenticateObj(
 export function setCustomStringifier(
   method: (input: unknown) => string,
   name: string
-): void {
+) {
   stringify = method;
   stringifierName = name;
 }
@@ -335,7 +335,7 @@ export function setCustomStringifier(
  * @param input
  * @param sk
  */
-export function sign(input: hexstring | Buffer, sk: secretKey | Buffer): string {
+export function sign(input: hexstring | Buffer, sk: secretKey | Buffer) {
   let inputBuf: Buffer;
   let skBuf: Buffer;
   if (typeof input !== 'string') {
@@ -384,7 +384,7 @@ export function signObj(
   obj: SignedObject,
   sk: secretKey | Buffer,
   pk: publicKey | Buffer
-): void {
+) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.');
   }
@@ -409,7 +409,7 @@ export function verify(
   msg: string,
   sig: hexstring | Buffer,
   pk: publicKey | Buffer
-): boolean {
+) {
   if (typeof msg !== 'string') {
     throw new TypeError('Message to compare must be a string.');
   }
@@ -417,7 +417,7 @@ export function verify(
   const pkBuf = _ensureBuffer(pk);
   try {
     const opened = Buffer.allocUnsafe(sigBuf.length - sodium.crypto_sign_BYTES);
-    sodium.crypto_sign_open(opened, sigBuf as Buffer, pkBuf as Buffer);
+    sodium.crypto_sign_open(opened, sigBuf, pkBuf);
     const verified = opened.toString('hex');
     return verified === msg;
   } catch (e) {
@@ -431,7 +431,7 @@ export function verify(
  * Returns true if the hash of the object minus the sign field matches the signed message in the sign field
  * @param obj
  */
-export function verifyObj(obj: SignedObject): boolean {
+export function verifyObj(obj: SignedObject) {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.');
   }
@@ -458,7 +458,7 @@ export function verifyObj(obj: SignedObject): boolean {
  * This function initialized the cryptographic hashing functions
  * @param key The HASH_KEY for initializing the cryptographic hashing functions
  */
-export function init(key: hexstring): void {
+export function init(key: hexstring) {
   if (!key) {
     throw new Error('Hash key must be passed to module constructor.');
   }
@@ -477,7 +477,7 @@ export function init(key: hexstring): void {
  * @param input The input data to be checked for or converted to a buffer
  * @param name The name given to the data to be ensured
  */
-export function _ensureBuffer(input: string | Buffer, name = 'Input'): Buffer | string {
+export function _ensureBuffer(input: string | Buffer, name = 'Input') {
   if (typeof input !== 'string') {
     if (Buffer.isBuffer(input)) {
       return input;
@@ -501,12 +501,12 @@ export function _ensureBuffer(input: string | Buffer, name = 'Input'): Buffer | 
 export function generateSharedKey(
   curveSk: curveSecretKey | Buffer,
   curvePk: curvePublicKey | Buffer
-): Buffer {
+) {
   const curveSkBuf = _ensureBuffer(curveSk);
   const curvePkBuf = _ensureBuffer(curvePk);
 
   const keyBuf = Buffer.allocUnsafe(sodium.crypto_scalarmult_BYTES);
-  sodium.crypto_scalarmult(keyBuf, curveSkBuf as Buffer, curvePkBuf as Buffer);
+  sodium.crypto_scalarmult(keyBuf, curveSkBuf, curvePkBuf);
   return keyBuf;
 }
 
@@ -521,11 +521,11 @@ export function _getAuthKey(
 ): Buffer {
   const sharedKeyBuf = _ensureBuffer(sharedKey);
   const nonceBuf = _ensureBuffer(nonce);
-  const resultBuf = xor(sharedKeyBuf as Buffer, nonceBuf as Buffer);
+  const resultBuf = xor(sharedKeyBuf, nonceBuf);
   return resultBuf;
 }
 
-export function bufferToHex(buffer: Buffer): string {
+export function bufferToHex(buffer: Buffer) {
   return [...new Uint8Array(buffer)]
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
