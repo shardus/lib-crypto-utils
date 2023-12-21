@@ -10,4 +10,5 @@ lint:      #Name of the job
  stage: lint  #Tells job which stage it is
  script:          #Scripts which need to be ran by the server
   - npm run lint
+  - npm run check
   - npm run compile
