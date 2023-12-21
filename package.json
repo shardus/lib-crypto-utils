@@ -12,8 +12,7 @@
     "release": "np --no-tests --no-yarn --any-branch",
     "test": "echo \"Error: no test specified\" && exit 1",
     "check": "gts check",
-    "lint": "eslint './src/**/*.ts'",
-    "lint-windows": "eslint ./src/**/*.ts",
+    "lint": "gts lint",
     "clean": "gts clean",
     "compile": "tsc -p .",
     "fix": "gts fix",
@@ -38,20 +37,15 @@
   },
   "homepage": "https://gitlab.com/shardus/shardus-crypto-utils#readme",
   "dependencies": {
-    "@shardus/types": "1.2.0",
     "buffer-xor": "2.0.2",
     "fast-stable-stringify": "1.0.0",
-    "sodium-native": "3.3.0"
+    "sodium-native": "3.3.0",
+    "@shardus/types": "1.2.0"
   },
   "devDependencies": {
     "@types/buffer-xor": "2.0.0",
     "@types/node": "18.16.1",
-    "gts": "^3.1.1",
-    "@typescript-eslint/eslint-plugin": "^5.48.0",
-    "@typescript-eslint/parser": "^5.48.0",
-    "eslint-plugin-no-unsanitized": "^4.0.2",
-    "eslint-plugin-security": "^1.7.1",
-    "eslint-plugin-xss": "^0.1.12",
+    "gts": "3.1.1",
     "np": "8.0.4",
     "typescript": "4.5.5"
   },
