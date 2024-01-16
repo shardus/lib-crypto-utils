@@ -379,24 +379,26 @@ export function sign(input: hexstring | Buffer, sk: secretKey | Buffer): string 
  * @param obj
  * @param sk
  * @param pk
+ * @returns the new signed object with the `sign` field. The original object is mutated as well.
  */
 export function signObj(
-  obj: SignedObject,
+  obj: object,
   sk: secretKey | Buffer,
   pk: publicKey | Buffer
-): void {
+): SignedObject {
   if (typeof obj !== 'object') {
     throw new TypeError('Input must be an object.');
   }
   // If it's an array, we don't want to try to sign it
-  if (obj.length !== undefined) {
+  if (Array.isArray(obj)) {
     throw new TypeError('Input cannot be an array.');
   }
   const objStr = stringify(obj);
   const hashed = hash(objStr, 'buffer');
   const sig = sign(hashed, sk);
   const signPk = Buffer.isBuffer(pk) ? bufferToHex(pk) : pk;
-  obj.sign = { owner: signPk, sig };
+  (obj as SignedObject).sign = { owner: signPk, sig };
+  return obj as SignedObject;
 }
 
 /**
