@@ -2,7 +2,7 @@
   "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "dist",
+    "outDir": "build",
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
@@ -13,5 +13,5 @@
     "typeRoots": ["node_modules/@types"]
   },
   "include": ["src/**/*", "src/tests"],
-  "exclude": ["./node_modules", "dist"]
+  "exclude": ["./node_modules", "build"]
 }
