@@ -1,6 +1,16 @@
-# shardus-crypto-utils
+# Shardus Crypto Utils
 
-Provides a simple interface to node-sodium cryptographic functions, as used by the Shardus project.
+Shardus Crypto Utils is a tool providing a set of cryptographic utility functions specifically designed for developers working with the Shardus core. It offers a simplified interface to node-sodium cryptographic functions, which are fundamental to the Shardus project.
+
+## Installation
+
+You can install Shardus Crypto Utils via npm:
+
+```bash
+npm install @shardus/crypto-utils
+```
+
+## Usage
 
 ```JavaScript
 const crypto = require('shardus-crypto-utils')
@@ -49,11 +59,7 @@ crypto.verify(input, sig, pk)
 crypto.verifyObj(obj)
 ```
 
-## Install
-
-`npm install @shardus/crypto-utils`
-
-## Use
+Here's how you can use Shardus Crypto Utils in your Node.js application:
 
 ```JavaScript
 const crypto = require('shardus-crypto-utils')
@@ -65,8 +71,14 @@ console.log(msg)
 
 ## Release
 
-For your releasing pleasure, oh shardus Maintainer, please run the command
+To release a new version of Shardus Crypto Utils, run the following command:
 
 ```sh
 npm run release
 ```
+
+This will handle version bumping, generating release notes, tagging, and publishing to npm.
+
+## Contributing
+
+Contributions are very welcome! Everyone interacting in our codebases, issue trackers, and any other form of communication, including chat rooms and mailing lists, is expected to follow our [code of conduct](./CODE_OF_CONDUCT.md) so we can all enjoy the effort we put into this project.
