@@ -405,8 +405,8 @@ function verify(msg: string, sig: hexstring | Buffer, pk: publicKey | Buffer): b
   try {
     const opened = Buffer.allocUnsafe(sigBuf.length - sodium.crypto_sign_BYTES)
     sodium.crypto_sign_open(opened, sigBuf as Buffer, pkBuf as Buffer)
-    const verified = opened.toString('hex')
-    return verified === msg
+    const msgBuf = Buffer.from(msg, 'hex')
+    return sodium.sodium_memcmp(opened, msgBuf)
   } catch (e) {
     throw new Error('Unable to verify provided signature with provided public key.')
   }
@@ -500,4 +500,9 @@ export function _getAuthKey(sharedKey: sharedKey | Buffer, nonce: string | Buffe
 
 export function bufferToHex(buffer: Buffer): string {
   return [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
+// exports for testing only
+export const testingFunctions = {
+  verify,
 }
