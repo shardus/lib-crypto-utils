@@ -41,7 +41,7 @@ The library exports cryptographic utility functions from `src/index.ts`. Key arc
    }
    ```
 
-3. **Type System**: Uses `@shardeum-foundation/lib-types` for shared type definitions across the Shardus ecosystem.
+3. **Type System**: Uses `@shardus/lib-types` for shared type definitions across the Shardus ecosystem.
 
 4. **Security Considerations**:
    - The `verify()` function is intentionally not exported due to safety concerns
@@ -63,6 +63,6 @@ The library exports cryptographic utility functions from `src/index.ts`. Key arc
 
 ### Development Notes
 - Node.js version must be exactly 18.19.1
-- All releases are published to npm under `@shardeum-foundation/lib-crypto-utils`
-- CI/CD uses Shardeum's reusable workflow with configurable checks via repository variables
+- All releases are published to npm under `@shardus/lib-crypto-utils`
+- CI/CD uses Shardus's reusable workflow with configurable checks via repository variables
 - The library is security-critical - all changes should be carefully reviewed
