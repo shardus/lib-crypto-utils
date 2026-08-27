@@ -49,7 +49,7 @@
     "@shardus/lib-types": "1.4.4",
     "buffer-xor": "2.0.2",
     "fast-stable-stringify": "1.0.0",
-    "sodium-native": "4.3.1"
+    "sodium-native": "5.1.0"
   },
   "devDependencies": {
     "@types/buffer-xor": "2.0.0",
